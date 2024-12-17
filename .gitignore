@@ -1,0 +1,13 @@
+data/ 
+.env 
+
+*.txt
+*.db 
+*.pkl
+*.json
+.DS_Store
+*.pyc
+__pycache__
+*.ipynb_checkpoints
+
+project_explorer.py
