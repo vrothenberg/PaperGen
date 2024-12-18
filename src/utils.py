@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import random
 import asyncio
@@ -79,14 +80,50 @@ async def retry_with_backoff(
 
 def clean_json(text: str) -> str:
     """
-    Cleans JSON data potentially wrapped with ```json ...` markers.
+    Cleans JSON data by removing markdown code block delimiters and attempting to fix common JSON formatting issues.
+
+    This function removes surrounding markdown code fences (```json```) or single backticks (`json`)
+    from a JSON string if present. It also attempts to fix common issues like missing commas or brackets.
+
+    Args:
+        text (str): The input string potentially wrapped with markdown code blocks.
+
+    Returns:
+        str: The cleaned and potentially corrected JSON string without markdown delimiters.
     """
-    text = text.strip()  # Remove leading/trailing whitespace
-    if text.startswith("```json") and text.endswith("```"):
-        return text[7:-3].strip()  # Remove ```json and ```, then strip again for newlines
-    elif text.startswith("`json") and text.endswith("`"): # handle single backticks as well
-        return text[5:-1].strip()
-    return text
+    # Remove leading and trailing whitespace
+    cleaned_text = text.strip()
+
+    # Remove code fences if present
+    patterns = [
+        r'^```json\s*\n?(.*?)\n?```$',  # Triple backticks with optional newlines
+        r'^`json\s*(.*?)`$',             # Single backticks
+    ]
+
+    for pattern in patterns:
+        match = re.match(pattern, cleaned_text, re.DOTALL | re.IGNORECASE)
+        if match:
+            cleaned_text = match.group(1).strip()
+            break  # Exit after the first successful match
+
+    # Attempt to fix common JSON issues
+    # Example: Replace single quotes with double quotes
+    cleaned_text = cleaned_text.replace("'", '"')
+
+    # Ensure that all opening brackets have corresponding closing brackets
+    open_brackets = cleaned_text.count('[') - cleaned_text.count(']')
+    open_braces = cleaned_text.count('{') - cleaned_text.count('}')
+    
+    if open_brackets > 0:
+        cleaned_text += ']' * open_brackets
+    if open_braces > 0:
+        cleaned_text += '}' * open_braces
+
+    # Add missing commas between JSON objects in a list
+    # This is a naive approach and may not handle all cases
+    cleaned_text = re.sub(r'\}\s*\{', '},{', cleaned_text)
+
+    return cleaned_text
 
 
 def parse_search_queries(response_text: str) -> List[SearchQuery]:
@@ -105,19 +142,18 @@ def parse_search_queries(response_text: str) -> List[SearchQuery]:
     try:
         if not response_text.strip():
             raise ValueError("Received empty response text.")
-                
-        response_text = response_text.strip()
-        
-        # Strip potential code block markers (if the model includes triple backticks)
-        if response_text.startswith("```json") and response_text.endswith("```"):
-            response_text = response_text.strip("```json").strip("```").strip()
 
-        # Parse the JSON response into a Python structure
-        queries_json = json.loads(response_text)
+        # Clean the JSON string
+        cleaned_text = clean_json(response_text)
+
+        # Attempt to parse the JSON
+        queries_json = json.loads(cleaned_text)
 
         # Validate each query using Pydantic
         queries = [SearchQuery(**query) for query in queries_json]
 
         return queries
+    except json.JSONDecodeError as e:
+        raise ValueError(f"JSON decoding error: {e}\nResponse text: {cleaned_text}")
     except Exception as e:
-        raise ValueError(f"Error parsing or validating search queries: {e}\nResponse text: {response_text}")
+        raise ValueError(f"Error parsing or validating search queries: {e}\nResponse text: {cleaned_text}")
