@@ -1,9 +1,11 @@
 import os
+import json
 import random
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, Callable, Coroutine, TypeVar, ParamSpec
+from typing import Any, List, Callable, Coroutine, TypeVar, ParamSpec
+from src.models import SearchQuery
 
 T = TypeVar('T')
 P = ParamSpec('P')
@@ -29,7 +31,7 @@ def save_results(article: str, topic: str, output_dir: str, logger: logging.Logg
 
 async def retry_with_backoff(
     func: Callable[P, Coroutine[Any, Any, T]],
-    max_retries: int = 5,
+    max_retries: int = 10,
     base_delay: float = 1.0,
     max_delay: float = 16.0,
     logger: logging.Logger = None,
@@ -56,17 +58,24 @@ async def retry_with_backoff(
     """
     for attempt in range(max_retries):
         try:
-            return await func(*args, **kwargs)
+            response = await func(*args, **kwargs)
+            return response
         except Exception as e:
             if attempt < max_retries - 1:
                 delay = min(base_delay * (2 ** attempt) + random.uniform(0, 1), max_delay)
                 if logger:
-                    logger.info(f"[Retry {attempt + 1}/{max_retries}] Function {func.__name__} failed. Retrying in {delay:.2f} seconds...")
+                    try:
+                        # Attempt to extract usage_metadata and finish_reason
+                        usage_metadata = response.to_dict()['usage_metadata'] if response else None
+                        finish_reason = response.to_dict()['candidates'][0]['finish_reason'] if response else None
+                        logger.info(f"[Retry {attempt + 1}/{max_retries}] Function {func.__name__} failed (reason: {finish_reason if finish_reason else 'Unknown'}). Retrying in {delay:.2f} seconds. Usage Metadata: {usage_metadata}")
+                    except (KeyError, AttributeError):
+                        logger.info(f"[Retry {attempt + 1}/{max_retries}] Function {func.__name__} failed. Retrying in {delay:.2f} seconds. Error: {e}")
                 await asyncio.sleep(delay)
             else:
                 print(f"[Error] Function {func.__name__} failed after {max_retries} retries.")
                 raise e
-            
+
 
 def clean_json(text: str) -> str:
     """
@@ -78,3 +87,37 @@ def clean_json(text: str) -> str:
     elif text.startswith("`json") and text.endswith("`"): # handle single backticks as well
         return text[5:-1].strip()
     return text
+
+
+def parse_search_queries(response_text: str) -> List[SearchQuery]:
+    """
+    Parse the raw JSON response from the model into a list of SearchQuery objects.
+
+    Args:
+        response_text (str): The raw JSON response from the model.
+
+    Returns:
+        List[SearchQuery]: A list of validated SearchQuery objects.
+
+    Raises:
+        ValueError: If the response cannot be parsed or validated.
+    """
+    try:
+        if not response_text.strip():
+            raise ValueError("Received empty response text.")
+                
+        response_text = response_text.strip()
+        
+        # Strip potential code block markers (if the model includes triple backticks)
+        if response_text.startswith("```json") and response_text.endswith("```"):
+            response_text = response_text.strip("```json").strip("```").strip()
+
+        # Parse the JSON response into a Python structure
+        queries_json = json.loads(response_text)
+
+        # Validate each query using Pydantic
+        queries = [SearchQuery(**query) for query in queries_json]
+
+        return queries
+    except Exception as e:
+        raise ValueError(f"Error parsing or validating search queries: {e}\nResponse text: {response_text}")

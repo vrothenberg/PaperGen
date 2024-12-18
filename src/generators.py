@@ -1,103 +1,11 @@
 
 import json
-import random
-import asyncio
 import logging
-from typing import List, Dict, Union, Optional
-from pydantic import BaseModel, Field, validator, ValidationError
-from vertexai.generative_models import GenerativeModel
+from typing import List
+from google.generativeai import GenerativeModel
 
-from src.utils import retry_with_backoff, clean_json
-
-
-class ReferenceItem(BaseModel):
-    reference_number: int = Field(..., description="Sequential reference number.")
-    authors: str = Field(..., description="Author(s) of the reference.")
-    year: str = Field(..., description="Publication year.")
-    title: str = Field(..., description="Title of the reference.")
-    journal_source: str = Field(..., description="Journal or source of publication.")
-    url_doi: str = Field(..., description="URL or DOI of the reference.")
-
-class FAQItem(BaseModel):
-    question: str = Field(..., description="A frequently asked question about the condition.")
-    answer: str = Field(..., description="A concise and informative answer to the question.")
-
-class OverviewSection(BaseModel):
-    heading: str = Field("Overview", const=True)
-    content: str = Field(..., description="A high-level introduction to the topic, explaining its significance and impact, key statistics, and facts.")
-
-class KeyFactsSection(BaseModel):
-    heading: str = Field("Key Facts", const=True)
-    content: List[str] = Field(..., description="Notable statistics or key data, presented as a list of strings.")
-
-class SymptomsSection(BaseModel):
-    heading: str = Field("Symptoms", const=True)
-    content: List[str] = Field(..., description="Common signs and symptoms, presented as a list of strings.")
-
-class TypesSection(BaseModel):
-    heading: str = Field("Types", const=True)
-    content: str = Field(..., description="Classifications or subtypes, each with a brief explanation. Types and subtypes may use nested subheadings (###, ####).")
-
-class CausesSection(BaseModel):
-    heading: str = Field("Causes", const=True)
-    content: str = Field(..., description="Explanation of underlying mechanisms or causes, including primary causes.")
-
-class RiskFactorsSection(BaseModel):
-    heading: str = Field("Risk Factors", const=True)
-    content: List[str] = Field(..., description="Factors that increase susceptibility, including lifestyle, genetic, or environmental risk factors (intended for bullet points).")
-
-class DiagnosisSection(BaseModel):
-    heading: str = Field("Diagnosis", const=True)
-    content: str = Field(..., description="Outline of the diagnostic process, including medical history, clinical symptoms, tests, or imaging tools. Can include subheadings (###) for specific methods.")
-
-class PreventionSection(BaseModel):
-    heading: str = Field("Prevention", const=True)
-    content: List[str] = Field(..., description="Practical advice for risk reduction, with evidence-based recommendations (intended for bullet points or numbered lists).")
-
-class SpecialistToVisitSection(BaseModel):
-    heading: str = Field("Specialist to Visit", const=True)
-    content: str = Field(..., description="Healthcare providers involved in diagnosis and treatment, and their roles.")
-
-class TreatmentSection(BaseModel):
-    heading: str = Field("Treatment", const=True)
-    content: str = Field(..., description="Description of medical and therapeutic interventions, including conventional, advanced, or emerging therapies.")
-
-class HomeCareSection(BaseModel):
-    heading: str = Field("Home-Care", const=True)
-    content: List[str] = Field(..., description="Tips for self-management, such as lifestyle adjustments, routines, or home remedies (intended for bullet points).")
-
-class LivingWithSection(BaseModel):
-    heading: str = Field("Living With", const=True)
-    content: str = Field(..., description="Guidance for long-term management, including emotional, social, or physical adaptation strategies.")
-
-class ComplicationsSection(BaseModel):
-    heading: str = Field("Complications", const=True)
-    content: str = Field(..., description="Discussion of potential health challenges if the condition is untreated or poorly managed.")
-
-class AlternativeTherapiesSection(BaseModel):
-    heading: str = Field("Alternative Therapies", const=True)
-    content: str = Field(..., description="Summary of non-conventional approaches (e.g., holistic care, acupuncture, supplements, etc.). Emphasize consulting a healthcare provider before use.")
-
-class FAQsSection(BaseModel):
-    heading: str = Field("FAQs", const=True)
-    content: List[FAQItem] = Field(..., description="A list of frequently asked questions and their corresponding answers.")
-
-class ReferencesSection(BaseModel):
-    heading: str = Field("References", const=True)
-    content: List[ReferenceItem] = Field(..., description="A list of references in APA-like style.")
-
-class Outline(BaseModel):
-    title: str = Field(..., description="The main heading of the article, which is the condition itself (e.g., 'Diabetes').")
-    subtitle: str = Field(..., description="A concise introductory phrase summarizing the condition.")
-    sections: List[Union[
-        OverviewSection, KeyFactsSection, SymptomsSection, TypesSection,
-        CausesSection, RiskFactorsSection, DiagnosisSection, PreventionSection,
-        SpecialistToVisitSection, TreatmentSection, HomeCareSection,
-        LivingWithSection, ComplicationsSection, AlternativeTherapiesSection,
-        FAQsSection, ReferencesSection
-    ]] = Field(..., description="A list of sections in the article, each with a heading and content.")
-
-
+from src.utils import retry_with_backoff, clean_json, parse_search_queries
+from src.models import Outline, SearchQuery
 
 async def generate_outline(topic: str, model: GenerativeModel, logger: logging.Logger = None) -> str:
     """
@@ -107,120 +15,11 @@ async def generate_outline(topic: str, model: GenerativeModel, logger: logging.L
     prompt = f"""You are a professional scientific writer tasked with developing a detailed and informative knowledgebase article outline on the condition: '{topic}'.
 
 ---
+The output MUST be a JSON object conforming to the following Pydantic model structure:
 
-The output must be a JSON object with the following structure:
-
-{{
-  "title": "Title of the Condition",
-  "subtitle": "A brief introductory subheading providing an overview of the condition.",
-  "sections": [
-      {{
-          "heading": "Overview",
-          "content": "high-level introduction to the topic, explaining its significance and impact, key statistics, and facts." // A single string
-      }},
-      {{
-          "heading": "Key Facts",
-          "content": ["Notable statistics and key data", ...] // List of strings
-      }},
-      {{
-        "heading": "Symptoms",
-        "content": ["Common signs and symptoms in bullet points.", ...] // List of strings
-      }},
-     {{
-          "heading": "Types",
-           "content": "Classifications or subtypes, each with a brief explanation. Subtypes may use nested subheadings (###)."
-      }},
-      {{
-          "heading": "Causes",
-          "content": "Explanation of underlying mechanisms or causes, including primary causes."
-      }},
-      {{
-          "heading": "Risk Factors",
-          "content": "Factors that increase susceptibility, including lifestyle, genetic, or environmental risk factors (bullet points)."
-      }},
-        {{
-          "heading": "Diagnosis",
-          "content": "Outline of the diagnostic process, including medical history, clinical symptoms, tests, or imaging tools. Can include subheadings (###) for specific methods."
-      }},
-      {{
-          "heading": "Prevention",
-          "content": "Practical advice for risk reduction, with evidence-based recommendations (bullet points or numbered lists)."
-       }},
-       {{
-            "heading": "Specialist to Visit",
-            "content": "Healthcare providers involved in diagnosis and treatment, and their roles."
-        }},
-       {{
-            "heading":"Treatment",
-           "content":"Description of medical and therapeutic interventions, including conventional, advanced, or emerging therapies."
-        }},
-        {{
-            "heading": "Home-Care",
-            "content": "Tips for self-management, such as lifestyle adjustments, routines, or home remedies (bullet points)."
-        }},
-         {{
-            "heading": "Living With",
-            "content":"Guidance for long-term management, including emotional, social, or physical adaptation strategies."
-        }},
-        {{
-            "heading":"Complications",
-            "content": "Discussion of potential health challenges if the condition is untreated or poorly managed."
-        }},
-       {{
-          "heading": "Alternative Therapies",
-          "content": "Summary of non-conventional approaches (e.g. holistic care, acupuncture, supplements, etc.). Emphasize consulting a healthcare provider before use."
-       }},
-        {{
-          "heading": "FAQs",
-          "content": [
-            {{
-              "question": "A frequently asked question about the condition.",
-              "answer": "A concise and informative answer to the question."
-            }},
-            {{
-              "question": "Another common question regarding the condition.",
-               "answer": "A clear and helpful response to the question."
-            }},
-            ...,
-            {{
-              "question": "Last slightly less frequently asked question.",
-               "answer": "Reliable and informational answer to the FAQ."
-            }}
-           ]
-        }},
-        {{
-      "heading": "References",
-      "content": [
-          {{
-            "reference_number": 1,
-            "authors": "Author(s)",
-            "year": "Year",
-            "title": "Title",
-            "journal_source": "Journal/Source",
-             "url_doi": "URL/DOI"
-          }},
-          {{
-           "reference_number": 2,
-            "authors": "Another Author(s)",
-            "year": "Year",
-            "title": "Another Title",
-            "journal_source": "Journal/Source",
-             "url_doi": "URL/DOI"
-          }},
-          ...,
-          {{
-           "reference_number": N,
-            "authors": "Author(s)",
-            "year": "Year",
-            "title": "Last Title",
-            "journal_source": "Journal/Source",
-             "url_doi": "URL/DOI"
-          }},
-
-        ]
-      }}
-    ]
-}}
+```json
+{json.dumps(Outline.model_json_schema(), indent=2)}
+```
 
 ---
 
@@ -282,107 +81,11 @@ Enhance the ARTICLE by incorporating additional information and insights from th
 
 ---
 
-Structure:
-The ARTICLE should follow this structure, it is already in JSON format:
+The output MUST be a JSON object conforming to the following Pydantic model structure:
 
-{{
-  "title": "Title of the Condition",
-  "subtitle": "A brief introductory subheading providing an overview of the condition.",
-  "sections": [
-      {{
-          "heading": "Overview",
-          "content": "A high-level introduction to the topic, explaining its significance and impact, key statistics, and facts."
-      }},
-      {{
-          "heading": "Key Facts",
-          "content": "Notable statistics or key data, presented in bullet points or a table."
-      }},
-      {{
-        "heading": "Symptoms",
-        "content": "A list of common signs and symptoms in bullet points."
-      }},
-     {{
-          "heading": "Types",
-           "content": "Classifications or subtypes, each with a brief explanation. Subtypes may use nested subheadings (###)."
-      }},
-      {{
-          "heading": "Causes",
-          "content": "Explanation of underlying mechanisms or causes, including primary causes."
-      }},
-      {{
-          "heading": "Risk Factors",
-          "content": "Factors that increase susceptibility, including lifestyle, genetic, or environmental risk factors (bullet points)."
-      }},
-        {{
-          "heading": "Diagnosis",
-          "content": "Outline of the diagnostic process, including medical history, clinical symptoms, tests, or imaging tools. Can include subheadings (###) for specific methods."
-      }},
-      {{
-          "heading": "Prevention",
-          "content": "Practical advice for risk reduction, with evidence-based recommendations (bullet points or numbered lists)."
-       }},
-       {{
-            "heading": "Specialist to Visit",
-            "content": "Healthcare providers involved in diagnosis and treatment, and their roles."
-        }},
-       {{
-            "heading":"Treatment",
-           "content":"Description of medical and therapeutic interventions, including conventional, advanced, or emerging therapies."
-        }},
-        {{
-            "heading": "Home-Care",
-            "content": "Tips for self-management, such as lifestyle adjustments, routines, or home remedies (bullet points)."
-        }},
-         {{
-            "heading": "Living With",
-            "content":"Guidance for long-term management, including emotional, social, or physical adaptation strategies."
-        }},
-        {{
-            "heading":"Complications",
-            "content": "Discussion of potential health challenges if the condition is untreated or poorly managed."
-        }},
-       {{
-          "heading": "Alternative Therapies",
-          "content": "Summary of non-conventional approaches (e.g., acupuncture, supplements). Emphasize consulting a healthcare provider before use."
-       }},
-        {{
-          "heading": "FAQs",
-          "content": [
-            {{
-              "question": "A frequently asked question about the condition.",
-              "answer": "A concise and informative answer to the question."
-            }},
-            ...
-            {{
-              "question": "Other common question regarding the condition.",
-               "answer": "A clear and helpful response to the question."
-            }}
-           ]
-        }},
-        {{
-      "heading": "References",
-      "content": [
-          {{
-            "reference_number": 1,
-            "authors": "Author(s)",
-            "year": "Year",
-            "title": "Title",
-            "journal_source": "Journal/Source",
-             "url_doi": "URL/DOI"
-          }},
-          {{
-           "reference_number": 2,
-            "authors": "Another Author(s)",
-            "year": "Year",
-            "title": "Another Title",
-            "journal_source": "Journal/Source",
-             "url_doi": "URL/DOI"
-          }}
-        ]
-      }}
-    ]
-}}
-
+```json
+{json.dumps(Outline.model_json_schema(), indent=2)}
+```
 
 ---
 
@@ -468,106 +171,11 @@ Refine and expand the ARTICLE by judiciously integrating references from the pro
 
 ---
 
-Structure:
-The ARTICLE should follow this structure, it is already in JSON format:
+The output MUST be a JSON object conforming to the following Pydantic model structure:
 
-{{
-  "title": "Title of the Condition",
-  "subtitle": "A brief introductory subheading providing an overview of the condition.",
-  "sections": [
-      {{
-          "heading": "Overview",
-          "content": "A high-level introduction to the topic, explaining its significance and impact, key statistics, and facts."
-      }},
-      {{
-          "heading": "Key Facts",
-          "content": "Notable statistics or key data, presented in bullet points or a table."
-      }},
-      {{
-        "heading": "Symptoms",
-        "content": "A list of common signs and symptoms in bullet points."
-      }},
-     {{
-          "heading": "Types",
-           "content": "Classifications or subtypes, each with a brief explanation. Subtypes may use nested subheadings (###)."
-      }},
-      {{
-          "heading": "Causes",
-          "content": "Explanation of underlying mechanisms or causes, including primary causes."
-      }},
-      {{
-          "heading": "Risk Factors",
-          "content": "Factors that increase susceptibility, including lifestyle, genetic, or environmental risk factors (bullet points)."
-      }},
-        {{
-          "heading": "Diagnosis",
-          "content": "Outline of the diagnostic process, including medical history, clinical symptoms, tests, or imaging tools. Can include subheadings (###) for specific methods."
-      }},
-      {{
-          "heading": "Prevention",
-          "content": "Practical advice for risk reduction, with evidence-based recommendations (bullet points or numbered lists)."
-       }},
-       {{
-            "heading": "Specialist to Visit",
-            "content": "Healthcare providers involved in diagnosis and treatment, and their roles."
-        }},
-       {{
-            "heading":"Treatment",
-           "content":"Description of medical and therapeutic interventions, including conventional, advanced, or emerging therapies."
-        }},
-        {{
-            "heading": "Home-Care",
-            "content": "Tips for self-management, such as lifestyle adjustments, routines, or home remedies (bullet points)."
-        }},
-         {{
-            "heading": "Living With",
-            "content":"Guidance for long-term management, including emotional, social, or physical adaptation strategies."
-        }},
-        {{
-            "heading":"Complications",
-            "content": "Discussion of potential health challenges if the condition is untreated or poorly managed."
-        }},
-       {{
-          "heading": "Alternative Therapies",
-          "content": "Summary of non-conventional approaches (e.g., acupuncture, supplements). Emphasize consulting a healthcare provider before use."
-       }},
-        {{
-          "heading": "FAQs",
-          "content": [
-            {{
-              "question": "A frequently asked question about the condition.",
-              "answer": "A concise and informative answer to the question."
-            }},
-            ...
-            {{
-              "question": "Other common question regarding the condition.",
-               "answer": "A clear and helpful response to the question."
-            }}
-           ]
-        }},
-        {{
-      "heading": "References",
-      "content": [
-          {{
-            "reference_number": 1,
-            "authors": "Author(s)",
-            "year": "Year",
-            "title": "Title",
-            "journal_source": "Journal/Source",
-             "url_doi": "URL/DOI"
-          }},
-          {{
-           "reference_number": 2,
-            "authors": "Another Author(s)",
-            "year": "Year",
-            "title": "Another Title",
-            "journal_source": "Journal/Source",
-             "url_doi": "URL/DOI"
-          }}
-        ]
-      }}
-    ]
-}}
+```json
+{json.dumps(Outline.model_json_schema(), indent=2)}
+```
 
 ---
 
@@ -639,3 +247,66 @@ PAPERS:
     except Exception as e:
         logger.error(f"Error in integrate_papers for topic {topic}: {e}", exc_info=True)
         return None
+    
+
+
+async def generate_search_query_response(outline: str, model: GenerativeModel, logger: logging.Logger = None) -> List[SearchQuery]:
+    """
+    Generate a raw JSON response containing search queries based on the provided outline.
+
+    Args:
+        outline (str): The detailed outline of the article to generate queries for.
+        model (GenerativeModel): The generative model instance used to produce the queries.
+
+    Returns:
+        str: The raw JSON response from the model (as a string).
+    """
+    prompt = f"""
+    You are tasked with generating search queries to find corroborating evidence for key claims in a knowledgebase article.
+    The goal is to identify relevant scientific papers to support and enhance the article, ensuring credibility and depth.
+
+    TASK:
+    - Review the provided outline of the knowledgebase article.
+    - Identify areas or claims that would benefit from further evidence or scientific backing.
+    - For each identified section, create a search query targeting relevant scientific papers or data.
+
+    REQUIREMENTS:
+    1. Return the search queries in strict JSON format.
+    2. Each query must include:
+        - 'section': The section of the outline the query corresponds to.
+        - 'query': A specific search term designed to find relevant papers or abstracts.
+    3. Use simple, standalone search terms or phrases. Avoid logical operators like `AND`, `OR`, or quotation marks.
+
+    GUIDELINES:
+    - Tailor queries to address gaps in evidence or provide additional insights for key claims in the article.
+    - Ensure search terms are specific enough to yield meaningful results.
+    - Avoid overly generic queries that may return irrelevant data.
+
+    OUTPUT FORMAT:
+    - Return a list of JSON objects, with each object containing the fields 'section' and 'query'.
+    - Example:
+        [
+            {{"section": "Overview", "query": "Global impact of mosquito-borne diseases"}},
+            {{"section": "Symptoms", "query": "Large local reactions to mosquito bites and immune response"}}
+        ]
+
+    ARTICLE OUTLINE:
+    {outline}
+
+    IMPORTANT:
+    - Focus on generating precise and targeted queries to find corroborating evidence.
+    - Do not include additional commentary or responses outside the JSON format.
+    - Output the response as strict JSON without any additional commentary or formatting. Do not include code block markers like triple backticks (`).
+    """
+    try: 
+        async def call_generate_content():
+            response = await model.generate_content_async(prompt)
+            response_text = clean_json(response.text)  # Extract the response text
+            return parse_search_queries(response_text)  # Parse after generation
+    
+        return await retry_with_backoff(call_generate_content, logger=logger)
+    
+    except Exception as e:
+        logger.error(f"Error in generate_search_query_response for topic: {e}", exc_info=True)
+        return None
+
