@@ -296,9 +296,9 @@ async def generate_search_query_response(outline: str, model: GenerativeModel, l
     IMPORTANT:
     - Focus on generating precise and targeted queries to find corroborating evidence.
     - Do not include additional commentary or responses outside the JSON format.
-    - Output the response as strict JSON without any additional commentary or formatting. Do not include code block markers like triple backticks (`).
+    - Output the response as strict valid JSON without any additional commentary or formatting. Do not include code block markers like triple backticks (`).
     """
-    try: 
+    try:
         async def call_generate_content():
             response = await model.generate_content_async(prompt)
             response_text = clean_json(response.text)  # Extract the response text

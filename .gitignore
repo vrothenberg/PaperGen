@@ -9,5 +9,6 @@ data/
 *.pyc
 __pycache__
 *.ipynb_checkpoints
+*.sh
 
 project_explorer.py

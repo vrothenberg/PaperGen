@@ -92,8 +92,7 @@ async def read_markdown_files(uptodate_paths: List[str], logger: logging.Logger)
                 combined_content.append(content)
         except Exception as e:
             logger.error(f"Error reading file {path}: {e}", exc_info=True)
-    spacer = "-"*80
-    return f"\n{spacer}\n".join(combined_content)
+    return "\n---\n".join(combined_content)
 
 
 async def process_topic(
