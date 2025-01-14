@@ -1,27 +1,76 @@
+# src/generators.py
 
 import json
 import logging
+import asyncio
+from pydantic import ValidationError
 from typing import List
-from google.generativeai import GenerativeModel
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import PydanticOutputParser
+from langchain_core.runnables import RunnableSequence
+from langsmith import wrappers, traceable
 
-from src.utils import retry_with_backoff, clean_json, parse_search_queries
-from src.models import Outline, SearchQuery
+from src.models import Article, SearchQuery, SearchQueryList, Paper
 
-async def generate_outline(topic: str, model: GenerativeModel, logger: logging.Logger = None) -> str:
+MAX_RETRIES = 10
+RETRY_DELAY = 2.0
+
+
+async def generate_outline_with_retries(
+    index: int,
+    prompt_and_model: RunnableSequence,
+    parser: PydanticOutputParser,
+    input_data: dict,
+    logger: logging.Logger = None
+) -> Article:
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            # Invoke the model with the input data
+            logger.info(f"[{index+1}] Attempt {attempt} of {MAX_RETRIES}...")
+            output = prompt_and_model.invoke(input_data)
+            
+            # Parse and validate the generated content
+            outline = parser.invoke(output)
+            logger.info(f"[{index+1}] Success on attempt {attempt}.")
+            return outline
+        
+        except ValidationError as e:
+            logger.error(f"[{index+1}] Validation Error on attempt {attempt}: {e}")
+        except Exception as ex:
+            logger.error(f"[{index+1}] Error on attempt {attempt}: {ex}")
+
+        # Wait before retrying
+        if attempt < MAX_RETRIES:
+            logger.info(f"[{index+1}] Retrying in {RETRY_DELAY} seconds...")
+            await asyncio.sleep(RETRY_DELAY ** attempt)
+        else:
+            logger.error(f"[{index+1}] Max retries reached. Aborting.")
+    
+    raise Exception
+
+
+@traceable(run_type="chain")
+async def generate_outline(
+    index: int,
+    condition: str,
+    alternative_name: str,
+    category: str,
+    model: ChatGoogleGenerativeAI,
+    logger: logging.Logger = None
+) -> Article:
     """
-    Generate a detailed knowledgebase article outline on a given topic using a generative model.
-    The outline follows a predefined structure and style requirements.
+    Generates a detailed knowledgebase article outline on a given topic using a generative model.
+    Leverages LangChain's built-in retries and error handling.
     """
-    prompt = f"""You are a professional scientific writer tasked with developing a detailed and informative knowledgebase article outline on the condition: '{topic}'.
+    parser = PydanticOutputParser(pydantic_object=Article)
+    # Create the prompt template with format instructions
+    prompt_template = PromptTemplate(
+        template="""You are a professional scientific writer tasked with developing a detailed and informative knowledgebase article outline on a given condition.
 
----
-The output MUST be a JSON object conforming to the following Pydantic model structure:
-
-```json
-{json.dumps(Outline.model_json_schema(), indent=2)}
-```
-
----
+Condition: '{condition}'
+Alternate Name: '{alternative_name}'
+Category: '{category}'
 
 Detailed Instructions for Each Section:
 
@@ -29,67 +78,99 @@ Detailed Instructions for Each Section:
 
 - **Subtitle**: A concise introductory phrase summarizing the condition.
 
-- **Sections**: Each section in the article is structured as a key-value pair inside an array. Each element in the array must contain a `"heading"` and `"content"` entry.
+- **Sections**: Each section in the article is structured with a specific heading and content. Ensure that all of these sections are included:
 
-    - **Heading**: A string providing the title of the heading. Ensure that all of these headings are included: `"Overview"`, `"Key Facts"`, `"Symptoms"`, `"Types"`, `"Causes"`, `"Risk Factors"`, `"Diagnosis"`, `"Prevention"`, `"Specialist to Visit"`, `"Treatment"`, `"Home-Care"`, `"Living With"`, `"Complications"`, `"Alternative Therapies"`, `"FAQs"`, `"References"`.
+    - **Overview**
+    - **Key Facts**
+    - **Symptoms**
+    - **Types**
+    - **Causes**
+    - **Risk Factors**
+    - **Diagnosis**
+    - **Prevention**
+    - **Specialist to Visit**
+    - **Treatment**
+    - **Home-Care**
+    - **Living With**
+    - **Complications**
+    - **Alternative Therapies**
+    - **FAQs**
+    - **References**
 
-    - **Content**: The content for the associated heading. You must adhere to the following requirements:
+For each section, provide the following:
 
-        - Maintain a professional yet approachable tone.
-        - Include hypertext links to relevant sources where appropriate, and format them in the "References" section, in the same way as a traditional scientific paper.
-        - Where possible, include statistics, research findings, or notable insights to make the article credible and informative.
-        - Use bullet points where specified to ensure that information is captured in the output.
-        - Ensure that content is well-written and contains a brief but sufficient summary.
-        - Where subtypes exist, include nested subheadings within the `content` using the `###` markdown header format.
+- **Heading**: The title of the section (e.g., "Overview").
 
-        - **FAQs**: The `content` for the `FAQs` section should be a JSON array of question-answer pairs. Each pair should have a "question" field and an "answer" field. The questions and answers should be concise, clear, and relevant to the condition. Generate 3 to 5 FAQs.
+- **Content**: Detailed information relevant to the section. Follow these guidelines:
+
+    - Maintain a professional yet approachable tone.
+    - Include hypertext links to relevant sources where appropriate, and format them in the "References" section in an APA-like style.
+    - Where possible, include statistics, research findings, or notable insights to make the article credible and informative.
+    - Use bullet points where specified to ensure that information is captured in the output.
+    - Ensure that content is well-written and contains a brief but sufficient summary.
+    - Where subtypes exist, include nested subheadings within the content using the `###` markdown header format.
+
+    - **FAQs**: The content for the FAQs section should be a JSON array of question-answer pairs. Each pair should have a "question" field and an "answer" field. Generate 3 to 5 FAQs.
 
 ---
+{format_instructions}
+""",
+        input_variables=["condition", "alternative_name", "category"],
+        partial_variables={"format_instructions": parser.get_format_instructions()},
+    )
 
-Output Requirements:
+    prompt_and_model = prompt_template | model
 
-- Return only the refined JSON object as specified above.
-- Do not add any extraneous commentary, reasoning steps, or notes outside the JSON object.
-- Ensure that all integrated references are formatted in an APA-like style and included in the `"References"` section.
-"""
-    try:
-        async def call_generate_content():
-            return (await model.generate_content_async(prompt)).text
+    # print("prompt_and_model", type(prompt_and_model))
 
-        response = await retry_with_backoff(call_generate_content, logger=logger)
-        return clean_json(response)
-    except Exception as e:
-        logger.error(f"Error in integrate_papers for topic {topic}: {e}", exc_info=True)
-        return None
+    # Define the input data
+    input_data = {
+        "condition": condition,
+        "alternative_name": alternative_name,
+        "category": category
+    }
 
-
+    logger.info(f"[{index+1}] Generating outline...")
+    # Generate the outline with retries
+    outline = await generate_outline_with_retries(
+        index, prompt_and_model, parser, input_data, logger
+    )
+    return outline
+            
 async def refine_outline_with_uptodate(
-    topic: str,
-    outline: str,
-    uptodate_articles: List[str],
-    model: GenerativeModel,
+    index: int,
+    condition: str,
+    alternative_name: str,
+    category: str,
+    article: Article,
+    uptodate_chunks: List[str],
+    model: ChatGoogleGenerativeAI,
     logger: logging.Logger
-) -> str:
+) -> Article:
     """
     Refines the given outline by incorporating relevant information and citations
     from a list of UpToDate articles.
     """
-    prompt = f"""You are a professional scientific writer tasked with integrating relevant references into an existing knowledgebase article (ARTICLE) on the condition: '{topic}'.
+    # Define the output parser
+    parser = PydanticOutputParser(pydantic_object=Article)
+
+    # Create the prompt template with stronger emphasis on citation quality
+    prompt_template = PromptTemplate(
+        template="""You are a professional scientific writer tasked with integrating relevant information and references into an existing knowledgebase article (ARTICLE) on a given condition.
+
+Condition: '{condition}'
+Alternate Name: '{alternative_name}'
+Category: '{category}'
 
 Goal:
-Enhance the ARTICLE by incorporating additional information and insights from the provided UpToDate articles (UPTODATE). Your task is to refine the ARTICLE while preserving its structure and integrity. **Importantly, do not directly cite, refer to, or mention UpToDate articles anywhere in the output.** Only cite the original scientific research articles that are referenced in those UpToDate articles if you choose to incorporate information from those articles, but prefer to use other URLs than the https://doi.org links, if possible.
+Enhance the ARTICLE by incorporating relevant information and insights from the provided UpToDate article snippets (UPTODATE).
+Your task is to refine the ARTICLE while preserving its structure and integrity.
+**Importantly, do not directly cite, refer to, or mention UpToDate articles anywhere in the output.**
+Only cite the original scientific research articles that are referenced in those UpToDate articles if you choose to incorporate information from those articles, but prefer to use other URLs than the https://doi.org links, if possible.
 
 ---
 
-The output MUST be a JSON object conforming to the following Pydantic model structure:
-
-```json
-{json.dumps(Outline.model_json_schema(), indent=2)}
-```
-
----
-
-Task:
+Detailed Instructions:
 
 1. Review and Analyze:
    - Examine the ARTICLE and the UPTODATE articles to identify areas where additional information, clarity, or updated data can be integrated.
@@ -100,88 +181,112 @@ Task:
    - Ensure all new information fits seamlessly within the existing framework, improving the article’s depth and accuracy.
 
 3. Citation and Reference Style:
+    - Each UPTODATE input contains a `references` field. This is a JSON encoded list of the reference strings used in the UPTODATE article. Each reference string will follow the format: `"[reference_number] citation"` where the citation field contains the full citation in APA format.
    - Use a consistent, numbered inline citation style (e.g., [1], [2], [3]) within the ARTICLE text.
-   - Add a References section at the end of the ARTICLE, listing all cited works in APA-like formatting, including authors, publication year, title, source/journal, URL or DOI.
-   - Hyperlink the URL or DOI where possible.
-   - **Prioritize non-DOI URLs when available**.
-   - **Do not cite directly from or mention UpToDate. If you use information from UpToDate, cite the original research articles it references instead.**
-   - Reformat provided citations if needed to ensure professional consistency.
+   - Add a References section at the end of the ARTICLE, listing all cited works. Each reference should be a single string containing all the necessary information.
+   - **Crucially, use citations judiciously and avoid over-citation.**
+   - **Only include a citation when it directly supports a specific claim or provides essential context.**
+   - **Do not include multiple citations for a single, general statement unless each citation offers unique and valuable information.**
+   - **Aim for 1-3 citations at the end of a sentence or paragraph, only if necessary.**
+   - **Strongly prefer a single, high-quality citation over multiple citations for the same point.**
+   - **Prioritize review articles or meta-analyses when available.**
+   - Do not add any empty references
+   - Prioritize non-DOI URLs when available.
+   - Do not cite directly from or mention UpToDate.
 
 4. Preservation and Adaptation:
    - Maintain the ARTICLE’s structure and professional tone.
    - Avoid overwriting existing content unless necessary for clarity or improvement.
    - Add content to expand on existing sections or provide additional context when relevant, for example additional FAQs (3 to 10 questions).
 
-5. Relevance and Redundancy:
-   - Integrate only information that directly supports or enhances claims in the ARTICLE.
-   - Do not repeat content already present unless it is significantly rephrased to add clarity or value.
-
-6. Formatting and Tone:
-   - Maintain a concise, professional tone.
-
 ---
 
 Output Requirements:
-- Return only the refined JSON object, which is the refined version of the ARTICLE. Do not include code block markers like triple backticks (`).
-- Include all integrated references properly formatted and placed in the "References" section.
-- Do not add any extraneous commentary, reasoning steps, or notes outside the refined ARTICLE.
-- The output must be valid JSON. Output the response as strict JSON without any additional commentary or formatting. 
+- Return only the refined JSON object as specified.
+- Do not include any extraneous commentary, reasoning steps, or notes outside the refined ARTICLE.
+- Ensure that all integrated references are formatted in the "References" section.
 
 ---
-
 Inputs:
 
 ARTICLE:
-{outline}
+{article}
 
 UPTODATE:
-{uptodate_articles}
-"""
+{uptodate_chunks}
 
-    try:
-        async def call_generate_content():
-            return (await model.generate_content_async(prompt)).text
+---
+{format_instructions}
+""",
+        input_variables=["condition", "alternative_name", "category", "article", "uptodate_chunks"],
+        partial_variables={"format_instructions": parser.get_format_instructions()},
+    )
 
-        response = await retry_with_backoff(call_generate_content, logger=logger)
-        return clean_json(response)
-    except Exception as e:
-        logger.error(f"Error in integrate_papers for topic {topic}: {e}", exc_info=True)
-        return None
+    # Define input data (no changes here)
+    input_data = {
+        "condition": condition,
+        "alternative_name": alternative_name,
+        "category": category,
+        "article": article.model_dump_json(indent=2),
+        "uptodate_chunks": json.dumps(uptodate_chunks, indent=2)
+    }
+
+    prompt_and_model = prompt_template | model
+
+    logger.info(f"[{index+1}] Generating article with UpToDate chunks...")
+    # Generate the outline with retries
+    outline = await generate_outline_with_retries(
+        index, prompt_and_model, parser, input_data, logger
+    )
+    return outline
 
 
-async def integrate_papers(topic:str, article: str, papers: List[dict], model: GenerativeModel, logger: logging.Logger) -> str:
+@traceable(run_type="chain")
+async def integrate_papers(
+    index: int,
+    condition: str,
+    alternative_name: str,
+    category: str,
+    article: Article,
+    papers: List[Paper],
+    model: ChatGoogleGenerativeAI,
+    logger: logging.Logger
+) -> Article:
     """
     Integrate relevant scientific papers into the provided article using the model.
 
     Args:
-        topic (str): The topic of the article.
+        condition (str): The condition or disease topic of the article.
+        alternative_name (str): The alternate name of the article, could be empty.
+        category (str): The category of the condition.
         article (str): The initial article or outline to be enhanced in JSON format.
         papers (List[dict]): A list of scientific paper details to integrate.
-        model (GenerativeModel): The generative model instance for processing.
+        model (ChatGoogleGenerativeAI): The Langchain model instance for generation.
         logger (logging.Logger): The logger to use for error messages
 
     Returns:
-        str: The revised and complete article with integrated references in JSON format.
+        Article: The validated and revised article with integrated references in JSON format.
     """
 
-    prompt = f"""You are a professional scientific writer tasked with integrating relevant references into an existing knowledgebase article (ARTICLE) on the topic: '{topic}'.
+    # Define the output parser
+    parser = PydanticOutputParser(pydantic_object=Article)
+
+    # Create the prompt template (REVISED)
+    prompt_template = PromptTemplate(
+        template="""You are a professional scientific writer tasked with integrating relevant references into an existing knowledgebase article (ARTICLE) on the given condition.
+
+Condition: '{condition}'
+Alternate Name: '{alternative_name}'
+Category: '{category}'
 
 Goal:
-Refine and expand the ARTICLE by judiciously integrating references from the provided PAPERS JSON list. These references should support the article's claims, improve its accuracy, and enhance its authority. The final output should be the revised article in JSON format, with integrated inline citations and a well-formatted reference list.
-
----
-
-The output MUST be a JSON object conforming to the following Pydantic model structure:
-
-```json
-{json.dumps(Outline.model_json_schema(), indent=2)}
-```
+Refine and expand the ARTICLE by judiciously integrating the most relevant references from the provided PAPERS JSON list. These references should support the article's claims, improve its accuracy, and enhance its authority. The final output should be the revised article in JSON format, with integrated inline citations and a well-formatted reference list.
 
 ---
 
 Input:
 1. ARTICLE: An existing piece of content (provided below) discussing the condition topic in detail. This is in JSON format.
-2. PAPERS: A JSON array of papers retrieved from PubMed and/or Semantic Scholar. Each paper entry includes:
+2. PAPERS: A JSON array of papers retrieved from Semantic Scholar. Each paper entry includes:
    - `section`: The ARTICLE section where the paper might be most relevant.
    - `query`: A query or topic associated with how the paper was found.
    - `title`: Title of the paper.
@@ -204,21 +309,25 @@ Tasks & Guidelines:
    - Cross-Reference Sections and Queries: Papers tagged for specific sections or queries should directly inform the corresponding ARTICLE sections. However, papers with broader applicability can be integrated across multiple sections as relevant.
 
 2. Select Relevant Papers:
+    - **Crucially, be highly selective with paper inclusion. Choose only the most impactful and directly relevant papers.**
    - Use papers selectively, focusing on those that directly support or expand the claims in the ARTICLE.
+   - **Strongly prefer a single, high-quality citation (e.g., a review article or meta-analysis) over multiple citations for the same point.**
    - Avoid including references solely for increasing the citation count.
    - Skip sections if no suitable paper from PAPERS aligns with their content.
 
 3. Citation and Reference Style:
+    - **Use citations sparingly and only when they add significant value.**
    - Use a consistent, numbered inline citation style (e.g., [1], [2], [3]) within the ARTICLE text.
+   - **Aim for 1-2 citations at the end of a sentence or paragraph, and only if necessary to support a specific claim.**
    - Add a References section at the end of the ARTICLE, listing all cited works in APA-like formatting, including authors, publication year, title, source/journal, URL or DOI.
    - Hyperlink the URL or DOI where possible.
-   - **Prefer non-DOI URLs when available**
+   - Prefer non-DOI URLs when available
    - Reformat provided citations if needed to ensure professional consistency.
 
 4. Preserve and Integrate Gracefully:
    - Maintain the ARTICLE’s original structure, and cohesive flow.
    - Do not remove existing references or hyperlinks unless it improves accuracy or clarity.
-   - Place citations inline at appropriate points in the text to enhance the readability and authority of the ARTICLE.
+   - Place citations inline at the end of sentences or paragraphs where they provide the strongest support.
 
 5. Clarity and Depth:
    - Summarize and incorporate key findings or data from relevant papers to strengthen claims without adding unnecessary complexity.
@@ -226,7 +335,7 @@ Tasks & Guidelines:
 
 6. No Extraneous Commentary:
    - Return only the final revised ARTICLE in JSON format.
-   - Do not include any instructions, reasoning steps, or additional commentary outside the revised ARTICLE and references. 
+   - Do not include any instructions, reasoning steps, or additional commentary outside the revised ARTICLE and references.
 
 7. Output the response as strict JSON without any additional commentary or formatting. Do not include code block markers like triple backticks (`).
 
@@ -236,77 +345,152 @@ ARTICLE:
 {article}
 
 PAPERS:
-{json.dumps(papers, indent=2)}
-"""
-    try:
-        async def call_generate_content():
-            return (await model.generate_content_async(prompt)).text
+{papers}
 
-        response = await retry_with_backoff(call_generate_content, logger=logger)
-        return clean_json(response)
-    except Exception as e:
-        logger.error(f"Error in integrate_papers for topic {topic}: {e}", exc_info=True)
-        return None
-    
+---
+{format_instructions}
+""",
+        input_variables=["condition", "alternative_name", "category", "article", "papers"],
+        partial_variables={"format_instructions": parser.get_format_instructions()},
+    )
+
+    # Define input data (no changes here)
+    input_data = {
+        "condition": condition,
+        "alternative_name": alternative_name,
+        "category": category,
+        "article": article.model_dump_json(indent=2),
+        "papers": json.dumps([paper.model_dump(mode='json') for paper in papers], indent=2)
+    }
+
+    prompt_and_model = prompt_template | model
+
+    logger.info(f"[{index+1}] Generating article with Semantic Scholar papers...")
+    # Generate the outline with retries
+    article = await generate_outline_with_retries(
+       index, prompt_and_model, parser, input_data, logger
+    )
+    return article
 
 
-async def generate_search_query_response(outline: str, model: GenerativeModel, logger: logging.Logger = None) -> List[SearchQuery]:
+
+
+async def generate_search_queries_with_retries(
+    index: int,
+    prompt_and_model: RunnableSequence,
+    parser: PydanticOutputParser,
+    input_data: dict,
+    logger: logging.Logger = None
+) -> List[SearchQuery]:
     """
-    Generate a raw JSON response containing search queries based on the provided outline.
+    Generates search queries with retries using a given prompt and model.
 
     Args:
-        outline (str): The detailed outline of the article to generate queries for.
-        model (GenerativeModel): The generative model instance used to produce the queries.
+        prompt_and_model: A LangChain Runnable representing the prompt and model.
+        parser: A PydanticOutputParser for parsing the output into SearchQuery objects.
+        input_data: The input data for the prompt, including the outline.
+        logger: Logger instance.
 
     Returns:
-        str: The raw JSON response from the model (as a string).
+        A list of SearchQuery objects.
+
+    Raises:
+        Exception: If the maximum number of retries is reached without success.
     """
-    prompt = f"""
-    You are tasked with generating search queries to find corroborating evidence for key claims in a knowledgebase article.
-    The goal is to identify relevant scientific papers to support and enhance the article, ensuring credibility and depth.
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            # Invoke the model with the input data
+            logger.info(f"[{index+1}] Search query generation attempt {attempt} of {MAX_RETRIES}...")
+            output = await prompt_and_model.ainvoke(input_data)
 
-    TASK:
-    - Review the provided outline of the knowledgebase article.
-    - Identify areas or claims that would benefit from further evidence or scientific backing.
-    - For each identified section, create a search query targeting relevant scientific papers or data.
+            # Parse and validate the generated content
+            search_queries = parser.invoke(output)
+            logger.info(f"[{index+1}] Search query generation success on attempt {attempt}.")
+            return search_queries
 
-    REQUIREMENTS:
-    1. Return the search queries in strict JSON format.
-    2. Each query must include:
-        - 'section': The section of the outline the query corresponds to.
-        - 'query': A specific search term designed to find relevant papers or abstracts.
-    3. Use simple, standalone search terms or phrases. Avoid logical operators like `AND`, `OR`, or quotation marks.
+        except ValidationError as e:
+            logger.error(f"[{index+1}] Search query validation error on attempt {attempt}: {e}")
+        except Exception as ex:
+            logger.error(f"[{index+1}] Search query generation error on attempt {attempt}: {ex}")
 
-    GUIDELINES:
-    - Tailor queries to address gaps in evidence or provide additional insights for key claims in the article.
-    - Ensure search terms are specific enough to yield meaningful results.
-    - Avoid overly generic queries that may return irrelevant data.
+        # Wait before retrying
+        if attempt < MAX_RETRIES:
+            logger.info(f"[{index+1}] Retrying search query generation in {RETRY_DELAY} seconds...")
+            await asyncio.sleep(RETRY_DELAY ** attempt)
+        else:
+            logger.error(f"[{index+1}] Max retries reached for search query generation. Aborting.")
 
-    OUTPUT FORMAT:
-    - Return a list of JSON objects, with each object containing the fields 'section' and 'query'.
-    - Example:
-        [
-            {{"section": "Overview", "query": "Global impact of mosquito-borne diseases"}},
-            {{"section": "Symptoms", "query": "Large local reactions to mosquito bites and immune response"}}
-        ]
+    raise Exception(f"Failed to generate search queries after {MAX_RETRIES} retries.")
 
-    ARTICLE OUTLINE:
-    {outline}
 
-    IMPORTANT:
-    - Focus on generating precise and targeted queries to find corroborating evidence.
-    - Do not include additional commentary or responses outside the JSON format.
-    - Output the response as strict valid JSON without any additional commentary or formatting. Do not include code block markers like triple backticks (`).
+@traceable(run_type="chain")
+async def generate_search_query_response(
+    index: int,
+    condition_name: str,
+    alternative_name: str, 
+    category: str, 
+    article: Article,
+    model: ChatGoogleGenerativeAI,
+    logger: logging.Logger = None
+) -> SearchQueryList:
     """
-    try:
-        async def call_generate_content():
-            response = await model.generate_content_async(prompt)
-            response_text = clean_json(response.text)  # Extract the response text
-            return parse_search_queries(response_text)  # Parse after generation
-    
-        return await retry_with_backoff(call_generate_content, logger=logger)
-    
-    except Exception as e:
-        logger.error(f"Error in generate_search_query_response for topic: {e}", exc_info=True)
-        return None
+    Generates search queries for each section of a given outline using a language model.
+
+    Args:
+        index (int)
+        article (Outline): The article outline.
+        model (ChatGoogleGenerativeAI): The language model.
+        logger (logging.Logger, optional): Logger instance. Defaults to None.
+
+    Returns:
+        SearchQueryList: A list of search queries, each corresponding to a section of the outline.
+    """
+    # Define the output parser
+    parser = PydanticOutputParser(pydantic_object=SearchQueryList)
+
+    # Create the prompt template
+    prompt_template = PromptTemplate(
+        template="""You are tasked with generating search queries to find corroborating evidence for key claims in a knowledgebase article.
+The goal is to identify relevant scientific papers to support and enhance the ARTICLE, ensuring credibility and depth.
+
+Condition: '{condition}'
+Alternate Name: '{alternative_name}'
+Category: '{category}'
+
+TASK:
+- Review the provided outline of the knowledgebase article.
+- Identify areas or claims that would benefit from further evidence or scientific backing.
+- For each identified section, create a search query targeting relevant scientific papers or data.
+
+REQUIREMENTS:
+1. Return the search queries in strict JSON format.
+2. Each query must include:
+    - 'section': The section of the outline the query corresponds to.
+    - 'query': A specific search term designed to find relevant papers or abstracts.
+3. Use simple, standalone search terms or phrases. Avoid logical operators like `AND`, `OR`, or quotation marks.
+
+
+ARTICLE:
+{article}
+
+---
+{format_instructions}
+        """,
+        input_variables=["article", "condition", "alternative_name", "category"],
+        partial_variables={"format_instructions": parser.get_format_instructions()},
+    )
+
+    # Define input data
+    input_data = {
+        "article": article.model_dump_json(indent=2),
+        "condition": condition_name
+    }
+
+    prompt_and_model = prompt_template | model
+
+    # Generate the search queries with retries
+    search_queries = await generate_search_queries_with_retries(
+        index, prompt_and_model, parser, input_data, logger
+    )
+    return search_queries
 

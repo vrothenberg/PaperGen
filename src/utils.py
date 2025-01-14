@@ -1,18 +1,23 @@
+# src/utils.py
 import os
 import re
 import json
 import random
+import hashlib
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, List, Callable, Coroutine, TypeVar, ParamSpec
-from src.models import SearchQuery
+from typing import Any, List, Dict, Callable, Coroutine, TypeVar, ParamSpec
+from src.models import SearchQuery, Article, Paper
+from pydantic import ValidationError
 
 T = TypeVar('T')
 P = ParamSpec('P')
 
 
-def save_results(article: str, topic: str, output_dir: str, logger: logging.Logger = None) -> None:
+def save_results(
+    index:int, data, topic: str, output_dir: str, logger: logging.Logger = None
+) -> None:
     """
     Saves the given article content to a markdown file in the specified output directory.
 
@@ -22,12 +27,12 @@ def save_results(article: str, topic: str, output_dir: str, logger: logging.Logg
         output_dir (str): The directory where the file will be saved.
     """
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"{topic.replace(' ', '_')}_{timestamp}.json"
+    filename = f"{sanitize_filename(topic)}_{timestamp}.json"
     filepath = os.path.join(output_dir, filename)
     os.makedirs(output_dir, exist_ok=True)
     with open(filepath, 'w') as f:
-        f.write(article)
-    logger.info(f"Results saved to: {filepath}")
+        f.write(data)
+    logger.info(f"[{index+1}] Results saved to: {filepath}")
 
 
 async def retry_with_backoff(
@@ -157,3 +162,107 @@ def parse_search_queries(response_text: str) -> List[SearchQuery]:
         raise ValueError(f"JSON decoding error: {e}\nResponse text: {cleaned_text}")
     except Exception as e:
         raise ValueError(f"Error parsing or validating search queries: {e}\nResponse text: {cleaned_text}")
+
+
+def sanitize_filename(dir):
+    # Replace spaces with underscores and remove all non-alphanumeric characters except underscores
+    sanitized = re.sub(r'[^\w\s]', '', dir).replace(' ', '_')
+    return sanitized
+
+
+def validate_article_json(article_json: str, logger: logging.Logger) -> bool:
+    """
+    Validates the article JSON against the Pydantic Article model.
+
+    Args:
+        article_json (str): The article JSON as a string.
+        logger (logging.Logger): Logger for logging information.
+
+    Returns:
+        bool: True if valid, False otherwise.
+    """
+    try:
+        article_dict = json.loads(article_json)
+        article = Article(**article_dict)
+        logger.debug("Article JSON is valid according to the Article model.")
+        return True
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON format: {e}")
+        return False
+    except ValidationError as e:
+        logger.error(f"Pydantic validation error: {e}")
+        return False
+
+def expand_citation_ranges(citation: str) -> List[str]:
+    """
+    Expand a citation range like [2,23-25] into a list of individual numbers: ['2', '23', '24', '25'].
+    """
+    expanded = []
+    for part in citation.split(","):
+        if "-" in part:  # Handle ranges like 23-25
+            range_parts = part.split("-")
+            if len(range_parts) == 2:  # Ensure it's a valid range
+                try:
+                    start, end = map(int, range_parts)
+                    expanded.extend(map(str, range(start, end + 1)))
+                except ValueError:
+                    print(f"Invalid range format: {part}. Skipping.")
+                    continue
+            else:
+                print(f"Unexpected range format: {part}. Skipping.")
+        else:  # Single reference like 2
+            try:
+                expanded.append(part.strip())
+            except ValueError:
+                print(f"Invalid reference: {part}. Skipping.")
+    return expanded
+
+def extract_citations(line: str) -> List[str]:
+    """
+    Extract and expand citations from a line, ensuring they are valid numeric references.
+    """
+    citations = []
+    for match in re.findall(r"\[(.*?)\]", line):  # Find content inside square brackets
+        # Ensure the match contains only numbers, commas, or hyphens
+        if re.match(r"^\d+([,-]\d+)*$", match):
+            citations.extend(expand_citation_ranges(match))
+    return citations
+
+
+def remove_duplicates(results: List[Dict]) -> List[Dict]:
+    """
+    Remove duplicate results based on the 'content' field.
+    """
+    seen = set()
+    unique_results = []
+    for result in results:
+        content_hash = hashlib.md5(result["content"].encode('utf-8')).hexdigest()
+        if content_hash not in seen:
+            unique_results.append(result)
+            seen.add(content_hash)
+    return unique_results
+
+
+def parse_reference(ref_str: str, chunk_title: str, logger: logging.Logger):
+    """
+    Parses a reference string to extract the reference number and citation.
+
+    Args:
+        ref_str (str): The reference string (e.g., "[24] De Rycke L, ...")
+        chunk_title (str): Title of the chunk for logging purposes.
+        logger (logging.Logger): Logger instance.
+
+    Returns:
+        dict: A dictionary with 'reference_number' and 'citation' keys, or None if parsing fails.
+    """
+    match = re.match(r'\[(\d+)\]\s*(.*)', ref_str)
+    if not match:
+        logger.warning(f"Invalid reference format in chunk '{chunk_title}': {ref_str}")
+        return None
+    ref_number = int(match.group(1))
+    citation = match.group(2).strip()
+    return {
+        'reference_number': ref_number,
+        'citation': citation
+    }
+
