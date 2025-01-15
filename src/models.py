@@ -19,7 +19,7 @@ class SearchQueryList(BaseModel):
 class ReferenceItem(BaseModel):
     reference_number: int = Field(..., description="Sequential reference number.")
     authors: Optional[str] = Field(None, description="Author(s) of the reference.")
-    year: Optional[str] = Field(None, description="Publication year.")
+    year: Optional[Union[int, str]] = Field(None, description="Publication year.")
     title: Optional[str] = Field(None, description="Title of the reference.")
     journal_source: Optional[str] = Field(None, description="Journal or source of publication.")
     url_doi: Optional[str] = Field(None, description="URL or DOI of the reference.")
