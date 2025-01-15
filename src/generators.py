@@ -28,10 +28,10 @@ async def generate_outline_with_retries(
         try:
             # Invoke the model with the input data
             logger.info(f"[{index+1}] Attempt {attempt} of {MAX_RETRIES}...")
-            output = prompt_and_model.invoke(input_data)
+            output = await prompt_and_model.ainvoke(input_data)
             
             # Parse and validate the generated content
-            outline = parser.invoke(output)
+            outline = await parser.ainvoke(output)
             logger.info(f"[{index+1}] Success on attempt {attempt}.")
             return outline
         
@@ -136,7 +136,8 @@ For each section, provide the following:
         index, prompt_and_model, parser, input_data, logger
     )
     return outline
-            
+
+@traceable(run_type="chain")        
 async def refine_outline_with_uptodate(
     index: int,
     condition: str,
@@ -244,7 +245,7 @@ UPTODATE:
 @traceable(run_type="chain")
 async def integrate_papers(
     index: int,
-    condition: str,
+    condition_name: str,
     alternative_name: str,
     category: str,
     article: Article,
@@ -275,7 +276,7 @@ async def integrate_papers(
     prompt_template = PromptTemplate(
         template="""You are a professional scientific writer tasked with integrating relevant references into an existing knowledgebase article (ARTICLE) on the given condition.
 
-Condition: '{condition}'
+Condition: '{condition_name}'
 Alternate Name: '{alternative_name}'
 Category: '{category}'
 
@@ -350,13 +351,13 @@ PAPERS:
 ---
 {format_instructions}
 """,
-        input_variables=["condition", "alternative_name", "category", "article", "papers"],
+        input_variables=["condition_name", "alternative_name", "category", "article", "papers"],
         partial_variables={"format_instructions": parser.get_format_instructions()},
     )
 
     # Define input data (no changes here)
     input_data = {
-        "condition": condition,
+        "condition_name": condition_name,
         "alternative_name": alternative_name,
         "category": category,
         "article": article.model_dump_json(indent=2),
@@ -374,14 +375,14 @@ PAPERS:
 
 
 
-
+@traceable(run_type="chain")
 async def generate_search_queries_with_retries(
     index: int,
     prompt_and_model: RunnableSequence,
     parser: PydanticOutputParser,
     input_data: dict,
     logger: logging.Logger = None
-) -> List[SearchQuery]:
+) -> SearchQueryList:
     """
     Generates search queries with retries using a given prompt and model.
 
@@ -404,7 +405,7 @@ async def generate_search_queries_with_retries(
             output = await prompt_and_model.ainvoke(input_data)
 
             # Parse and validate the generated content
-            search_queries = parser.invoke(output)
+            search_queries = await parser.ainvoke(output)
             logger.info(f"[{index+1}] Search query generation success on attempt {attempt}.")
             return search_queries
 
@@ -476,14 +477,16 @@ ARTICLE:
 ---
 {format_instructions}
         """,
-        input_variables=["article", "condition", "alternative_name", "category"],
+        input_variables=["condition", "alternative_name", "category", "article"],
         partial_variables={"format_instructions": parser.get_format_instructions()},
     )
 
     # Define input data
     input_data = {
+        "condition": condition_name,
+        "alternative_name": alternative_name,
+        "category": category,
         "article": article.model_dump_json(indent=2),
-        "condition": condition_name
     }
 
     prompt_and_model = prompt_template | model
