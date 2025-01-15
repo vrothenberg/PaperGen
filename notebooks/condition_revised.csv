@@ -1,0 +1,294 @@
+Condition,Alternative Name,Category
+Food Allergy,,Allergies
+Allergic Rhinitis,Hay Fever,Allergies
+Drug Allergies,,Allergies
+Atopic Dermatitis,Eczema,Allergies
+Contact Dermatitis,,Allergies
+Ankylosing Spondylitis,,Autoimmune & Inflammatory
+Gout,,Autoimmune & Inflammatory
+Guillain-Barre Syndrome,,Autoimmune & Inflammatory
+Multiple Sclerosis,MS,Autoimmune & Inflammatory
+Osteoarthritis,,Autoimmune & Inflammatory
+Rheumatoid Arthritis,,Autoimmune & Inflammatory
+Sarcoidosis,,Autoimmune & Inflammatory
+Scleroderma,,Autoimmune & Inflammatory
+Systemic Lupus Erythematosus,SLE,Autoimmune & Inflammatory
+Vasculitis,,Autoimmune & Inflammatory
+Ant Bites,,Bites & Stings
+Bedbug Bites,,Bites & Stings
+Flea Bites,,Bites & Stings
+Horsefly Bites,,Bites & Stings
+Mosquito Bites,,Bites & Stings
+Spider Bites,,Bites & Stings
+Tick Bites,,Bites & Stings
+Anemia,,Blood Health
+Hemophilia,,Blood Health
+Thrombocytopenia,Low Platelet Count,Blood Health
+Polycythemia Vera,,Blood Health
+Osteoporosis,,Bone Health
+Osteomalacia,Soft Bone Disease,Bone Health
+Osteogenesis Imperfecta,Brittle Bone Disease,Bone Health
+Paget's Disease of Bone,Osteitis Deformans,Bone Health
+Bone Fractures,,Bone Health
+Basal Cell Carcinoma,,Cancer
+Breast Cancer,,Cancer
+Cervical Cancer,,Cancer
+Colorectal Cancer,,Cancer
+Liver Cancer,,Cancer
+Lung Cancer,,Cancer
+Melanoma,,Cancer
+Ovarian Cancer,,Cancer
+Prostate Cancer,,Cancer
+Squamous Cell Carcinoma,,Cancer
+Leukemia,Blood Cancer,Cancer
+Cardiac Arrhythmia,,Cardiovascular
+Coronary Artery Disease,,Cardiovascular
+Heart Failure,,Cardiovascular
+Hypertension,High Blood Pressure,Cardiovascular
+Chronic Fatigue Syndrome,,Chronic Conditions
+Fibromyalgia,,Chronic Conditions
+Post-COVID Syndrome,Long COVID,Chronic Conditions
+Anal Fissures,,Digestive Health
+Appendicitis,,Digestive Health
+Barrett's Esophagus,,Digestive Health
+Celiac Disease,,Digestive Health
+Cholecystitis,,Digestive Health
+Colitis,,Digestive Health
+Constipation,,Digestive Health
+Crohn's Disease,Intestinal Inflammation,Digestive Health
+Diarrhea,,Digestive Health
+Diverticulitis,,Digestive Health
+Esophagitis,,Digestive Health
+Functional Dyspepsia,,Digestive Health
+Gallbladder Disease,,Digestive Health
+Gastritis,,Digestive Health
+Gastroenteritis,Stomach Flu,Digestive Health
+Gastroesophageal Reflux Disease,GERD,Digestive Health
+Gastroparesis,,Digestive Health
+Hemorrhoids,Piles,Digestive Health
+Inflammatory Bowel Disease,IBD,Digestive Health
+Irritable Bowel Syndrome,IBS,Digestive Health
+Lactose Intolerance,,Digestive Health
+Pancreatitis,,Digestive Health
+Peptic Ulcer Disease,PUD,Digestive Health
+Small Intestinal Bacterial Overgrowth,SIBO,Digestive Health
+Zollinger-Ellison Syndrome,,Digestive Health
+Otitis Externa,Swimmer's Ear,Ear & Throat Health
+Tonsillitis,,Ear & Throat Health
+Eustachian Tube Dysfunction,Eustachian Tube Disorder,Ear & Throat Health
+Laryngitis,,Ear & Throat Health
+Tympanic Membrane (Eardrum) Perforation,,Ear & Throat Health
+Eustachian Tube Dysfunction,ETD,Ear & Throat Health
+Hashimoto's Thyroiditis,Autoimmune Thyroiditis,Endocrine & Metabolic
+Hyperthyroidism,,Endocrine & Metabolic
+Hypothyroidism,,Endocrine & Metabolic
+Type 1 Diabetes,,Endocrine & Metabolic
+Type 2 Diabetes,,Endocrine & Metabolic
+Age-related Macular Degeneration,AMD,Eye Health
+Amblyopia,,Eye Health
+Astigmatism,,Eye Health
+Blepharitis,,Eye Health
+Cataracts,,Eye Health
+Conjunctivitis,,Eye Health
+Corneal Abrasion,,Eye Health
+Diabetic Retinopathy,,Eye Health
+Dry Eye Syndrome,Dry Eye,Eye Health
+Eye Floaters,,Eye Health
+Glaucoma,,Eye Health
+Hyperopia,Farsightedness,Eye Health
+Keratitis,,Eye Health
+Keratoconus,,Eye Health
+Macular Hole,,Eye Health
+Myopia,Nearsightedness,Eye Health
+Photophobia,,Eye Health
+Presbyopia,,Eye Health
+Retinal Detachment,,Eye Health
+Retinitis Pigmentosa,,Eye Health
+Strabismus,,Eye Health
+Uveitis,,Eye Health
+Cystic Fibrosis,,Genetic Conditions
+Huntington's Disease,,Genetic Conditions
+Sickle Cell Disease,,Genetic Conditions
+Marfan Syndrome,,Genetic Conditions
+Yeast Infection,Candidiasis,Infections
+Chickenpox and Shingles,Varicella-Zoster Virus Infection,Infections
+Clostridioides difficile (C. diff) Infection,,Infections
+Common Cold,,Infections
+HIV/AIDS,,Infections
+Hepatitis B,HBV,Infections
+Hepatitis C,HCV,Infections
+Herpes Simplex Virus Infection,HSV,Infections
+Human Papillomavirus (HPV) Infection,,Infections
+Influenza,Flu,Infections
+Lyme Disease,,Infections
+Meningitis,,Infections
+Mononucleosis,Mono,Infections
+Osteomyelitis,Bone Infection,Infections
+Sepsis,,Infections
+Streptococcal Pharyngitis,Strep throat,Infections
+Tuberculosis,,Infections
+Chronic Kidney Disease,CKD,Liver Health
+Cirrhosis,,Liver Health
+Hepatitis,,Liver Health
+Metabolic-Associated Steatohepatitis,,Liver Health
+Metabolic-Associated Steatotic Liver Disease,,Liver Health
+Attention-Deficit/Hyperactivity Disorder,ADHD,Mental Health
+Anxiety Disorder,,Mental Health
+Asperger's Syndrome,,Mental Health
+Autism Spectrum Disorder,,Mental Health
+Bipolar Disorder,,Mental Health
+Depression,,Mental Health
+Loneliness,,Mental Health
+Post-traumatic Stress Disorder,PTSD,Mental Health
+Panic Disorder,,Mental Health
+Postpartum Depression,,Mental Health
+Seasonal Affective Disorder,,Mental Health
+Childhood Obesity,,Metabolic Health
+Dyslipidemia,,Metabolic Health
+Metabolic Syndrome,,Metabolic Health
+Obesity,,Metabolic Health
+Prediabetes,,Metabolic Health
+Achilles Tendinitis,Achilles Tendinopathy,Musculoskeletal
+Acute fractures,,Musculoskeletal
+Ankle Sprain,,Musculoskeletal
+Anterior Cruciate Ligament Tear,ACL Tear,Musculoskeletal
+Bruises,Contusion,Musculoskeletal
+Burns,,Musculoskeletal
+Bursitis,,Musculoskeletal
+Frostbite,,Musculoskeletal
+Medial Epicondylitis,Golfer's Elbow,Musculoskeletal
+Growth Plate Fracture,,Musculoskeletal
+Hamstring Injury,,Musculoskeletal
+Herniated Disc,,Musculoskeletal
+Iliotibial Band Syndrome,,Musculoskeletal
+Glenoid Labrum Tear,,Musculoskeletal
+Little League Elbow,,Musculoskeletal
+Little League Shoulder,,Musculoskeletal
+Medial Collateral Ligament Injury,,Musculoskeletal
+Muscle Cramp,,Musculoskeletal
+Osgood-Schlatter Disease,,Musculoskeletal
+Osteochondritis Dissecans,,Musculoskeletal
+Overtraining Syndrome,,Musculoskeletal
+Repetitive Strain Injury,,Musculoskeletal
+Patellar Tendinitis,,Musculoskeletal
+Patellofemoral Pain Syndrome,PFPS,Musculoskeletal
+Sacroiliac Joint Dysfunction,Pelvic Pain,Musculoskeletal
+Plantar Fasciitis,,Musculoskeletal
+Rotator Cuff Tear,,Musculoskeletal
+Scoliosis,,Musculoskeletal
+Sever's Disease,Calcaneal Apophysitis,Musculoskeletal
+Medial Tibial Stress Syndrome,Shin Splints,Musculoskeletal
+Shoulder Dislocation,,Musculoskeletal
+Spinal Stenosis,,Musculoskeletal
+Spondylolisthesis,,Musculoskeletal
+Sprains and Strains,,Musculoskeletal
+Stress Fracture,,Musculoskeletal
+Lateral Epicondylitis,Tennis Elbow,Musculoskeletal
+Meniscus Tear,,Musculoskeletal
+Alzheimer's Disease,,Neurological
+Carpal Tunnel Syndrome,,Neurological
+Cervical Radiculopathy,,Neurological
+Cluster Headache,,Neurological
+Concussions,,Neurological
+ICU Delirium,,Neurological
+Lumbar Radiculopathy,,Neurological
+Migraine Headache,,Neurological
+Postural Orthostatic Tachycardia Syndrome,POTS,Neurological
+Parkinson's Disease,,Neurological
+Peripheral Neuropathy,,Neurological
+Postherpetic Neuralgia,Shingles Pain,Neurological
+Sciatica,,Neurological
+Stroke,,Neurological
+Tension Headache,,Neurological
+Trigeminal Neuralgia,,Neurological
+Vertigo,,Neurological
+Visual Migraine,Ocular Migraine,Neurological
+Halitosis,Bad Breath,Oral Health
+Cavities,Tooth Decay,Oral Health
+Dental Abscess,,Oral Health
+Dry Mouth,Xerostomia,Oral Health
+Gingivitis,,Oral Health
+Mouth Ulcers,Canker Sores,Oral Health
+Orthodontic Relapse,,Oral Health
+Periodontitis,,Oral Health
+Dentin Hypersensitivity,Tooth Sensitivity,Oral Health
+Wisdom Teeth Impaction,,Oral Health
+Malaria,,Parasitic Conditions
+Toxoplasmosis,,Parasitic Conditions
+Giardiasis,,Parasitic Conditions
+Trichinosis,,Parasitic Conditions
+Lice Infestation,Pediculosis,Parasitic Conditions
+Scabies,,Parasitic Conditions
+Endometriosis,,Reproductive Health
+Infertility,,Reproductive Health
+Menopause,Menopausal Symptoms,Reproductive Health
+Menstrual Disorders,,Reproductive Health
+Polycystic Ovary Syndrome (PCOS) Related Hair Loss,,Reproductive Health
+Polycystic Ovary Syndrome,PCOS,Reproductive Health
+Premenstrual Dysphoric Disorder,,Reproductive Health
+Premenstrual Syndrome,,Reproductive Health
+Acute Respiratory Distress Syndrome,ARDS,Respiratory
+Asthma,,Respiratory
+Bronchitis,,Respiratory
+Chronic Cough,,Respiratory
+Chronic Obstructive Pulmonary Disease,COPD,Respiratory
+Lung Abscess,,Respiratory
+Occupational Lung Disease,,Respiratory
+Pneumoconiosis,,Respiratory
+Pneumonia,,Respiratory
+Pulmonary Embolism,,Respiratory
+Pulmonary Fibrosis,,Respiratory
+Pulmonary Hypertension,,Respiratory
+Sinusitis,Sinus Infection,Respiratory
+Bacterial Vaginosis,BV,Sexual & Reproductive Health
+Chlamydia Infection,,Sexual & Reproductive Health
+Gonorrhea,,Sexual & Reproductive Health
+Syphilis,,Sexual & Reproductive Health
+Trichomoniasis,,Sexual & Reproductive Health
+Acne Vulgaris,Acne Vulgaris,Skin Health
+Actinic Keratosis,,Skin Health
+Albinism,,Skin Health
+Alopecia Areata,,Skin Health
+Athlete's Foot,Tinea Pedis,Skin Health
+Boils,Furuncle,Skin Health
+Cellulitis,,Skin Health
+Contact Dermatitis,,Skin Health
+Cystic Acne,,Skin Health
+Eczema,Atopic Dermatitis,Skin Health
+Folliculitis,,Skin Health
+Alopecia,Hair Loss,Skin Health
+Urticaria,Hives,Skin Health
+Hyperhidrosis,,Skin Health
+Tinea Cruris,Jock Itch,Skin Health
+Keloid,,Skin Health
+Keratosis Pilaris,,Skin Health
+Melasma,,Skin Health
+Postpartum Hair Loss,,Skin Health
+Psoriasis,,Skin Health
+Ringworm,Tinea,Skin Health
+Rosacea,,Skin Health
+Seborrheic Dermatitis,,Skin Health
+Skin Tag,Acrochordon,Skin Health
+Sunburn,,Skin Health
+Vitiligo,,Skin Health
+Wart,,Skin Health
+Central Sleep Apnea,CSA,Sleep Disorders
+Delayed Sleep Phase Syndrome,,Sleep Disorders
+Familial Advanced Sleep Phase Syndrome,,Sleep Disorders
+Idiopathic Hypersomnia,,Sleep Disorders
+Insomnia,,Sleep Disorders
+Narcolepsy,,Sleep Disorders
+Night Terrors,,Sleep Disorders
+Non-24-Hour Sleep-Wake Disorder,,Sleep Disorders
+Periodic Limb Movement Disorder,PLMD,Sleep Disorders
+REM Sleep Behavior Disorder,,Sleep Disorders
+Restless Legs Syndrome,,Sleep Disorders
+Shift Work Sleep Disorder,,Sleep Disorders
+Sleep Apnea,,Sleep Disorders
+Sleep Bruxism,Teeth Grinding,Sleep Disorders
+Sleepwalking,,Sleep Disorders
+Interstitial Cystitis,,Urinary Health
+Urinary Tract Infection,UTI,Urinary Health
+Nephrolithiasis,Kidney Stones,Urinary Health
+Urinary Incontinence,,Urinary Health
+Prostatitis,,Urinary Health

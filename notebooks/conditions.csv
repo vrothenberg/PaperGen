@@ -1,0 +1,272 @@
+Condition,Disease type
+ADHD,Brain Health
+Achilles Tendinitis or Rupture,Injuries
+Acne Vulgaris,Skin
+Actinic Keratosis,Skin
+Acute Respiratory Distress Syndrome (ARDS),Respiratory
+Acute fractures,Injuries
+Age-Related Macular Degeneration (AMD),Vision
+Albinism,Skin
+Alopecia Areata,Hair
+Alzheimer’s disease,Neurodegenerative
+Amblyopia,Vision
+Anal Fissures,Digestive
+Anemia,Blood
+Ankle Sprains,Injuries
+Ankylosing spondylitis,Immune system
+Ant Bites,Bites
+Anterior Cruciate Ligament (ACL) Tears,Injuries
+Anxiety,Brain Health
+Appendicitis,Immune system
+Asperger's Syndrome,Brain Health
+Asthma,Respiratory
+Astigmatism,Vision
+Athlete’s Foot (Tinea Pedis),Skin
+Autism,Brain Health
+Autism Spectrum Disorder,Brain Health
+Autoimmune thyroiditis (Hashimoto's),Immune system
+Bacterial Vaginosis (BV),STD
+Bad Breath (Halitosis),Dental
+Barrett’s Esophagus,Digestive
+Basal Cell Carcinoma,Cancer
+Bedbug Bites,Bites
+Bipolar syndrome,Brain Health
+Blepharitis,Vision
+Boils,Skin
+Breast cancer,Cancer
+Bronchitis,Cold
+Bruises,Injuries
+Burns,Injuries
+Bursitis,Injuries
+Candidiasis (Yeast Infection),Infectious diseases
+Cardiac arrhythmia,Heart
+Carpal tunnel syndrome,Pain
+Cataracts,Vision
+Cavities (Tooth Decay),Dental
+Celiac Disease,Digestive
+Cellulitis,Skin
+Central Sleep Apnea (CSA),Sleep
+Cervical Cancer,Cancer
+Cervical radiculopathy (nerve pain in the neck),Pain
+Chickenpox and Shingles,Infectious diseases
+Childhood overweight and obesity,Metabolic
+Chlamydia,STD
+Cholecystitis,Inflammation
+Chronic Cough,Respiratory
+Chronic Kidney Disease (CKD),Metabolic
+Chronic Obstructive Pulmonary Disease (COPD),Respiratory
+Chronic fatigue syndrome,Fatigue
+Clostridioides difficile (C. diff) Infection,Digestive
+Cluster Headache,Pain
+Colitis,Digestive
+Colorectal cancer,Cancer
+Common Cold,Cold
+Concussions,Injuries
+Conjuctivitis,Infectious diseases
+Conjunctivitis,Vision
+Constipation,Digestive
+Contact Dermatitis,Skin
+Corneal Abrasion,Vision
+Coronary artery disease,Heart
+Crohn’s disease (intestinal inflammation),Digestive
+Cystic Acne,Skin
+Cystic Fibrosis,Genetic
+Delayed sleep phase syndrome,Sleep
+Dental Abscess,Dental
+Depression,Metabolic
+Diabetic Retinopathy,Vision
+Diarrhea,Digestive
+Diverticulitis,Digestive
+Dry Eye Syndrome,Vision
+Dry Mouth (Xerostomia),Dental
+Dyslipidemia,Metabolic
+Eczema (Atopic Dermatitis),Skin
+Endometriosis,Female
+Esophagitis,Digestive
+Familial advanced sleep phase syndrome,Sleep
+Fibromyalgia,Fatigue
+Flea Bites,Bites
+Floaters,Vision
+Folliculitis,Skin
+Food Allergies,Digestive
+Frostbite,Injuries
+Functional Dyspepsia,Digestive
+Gallbladder Disease,Digestive
+Gallbladder Disease,Digestive
+Gastritis,Digestive
+Gastroenteritis,Digestive
+Gastroesophageal Reflux Disease (GERD),Digestive
+Gastroparesis,Digestive
+Gingivitis,Dental
+Glaucoma,Vision
+Golfer's elbow (medial epicondylitis),Injuries
+Gonorrhea,STD
+Gout,Immune system
+Growth plate fracture,Injuries
+Guillain-Barré syndrome,Immune system
+HIV/AIDS,Infectious diseases
+Hair Loss (Alopecia),Hair
+Hamstring Injuries,Injuries
+Heart failure,Heart
+Hemorrhoids,Digestive
+Hepatitis,Metabolic
+Hepatitis B (HBV),Infectious diseases
+Hepatitis C (HCV),Infectious diseases
+Herniated Discs,Injuries
+Herpes Simplex Virus (HSV),Infectious diseases
+Hives (Urticaria),Skin
+Horsefly Bites,Bites
+Human Papillomavirus (HPV) Infection,Infectious diseases
+Hyperhidrosis,Skin
+Hyperopia (Farsightedness),Vision
+Hypertension,Metabolic
+Hyperthyroidism,Endocrine
+Hypothyroidism,Endocrine
+ICU delirium,Brain Health
+IT Band Syndrome,Injuries
+Idiopathic Hypersomnia,Sleep
+Infertility,Female
+Inflammatory Bowel Disease (IBD),Digestive
+Influenza,Cold
+Insomnia,Sleep
+Interstitial Cystitis,Pain
+Irritable Bowel Syndrome (IBS),Digestive
+Jock Itch (Tinea Cruris),Skin
+Keloids,Skin
+Keratitis,Vision
+Keratoconus,Vision
+Keratosis Pilaris,Skin
+Labral Tears,Injuries
+Lactose Intolerance,Digestive
+Lice Infestation,Parasitic
+Little League elbow,Injuries
+Little League shoulder,Injuries
+Liver cancer,Cancer
+Loneliness,Brain Health
+Lumbar radiculopathy (nerve pain in the lower back),Pain
+Lung Abscess,Respiratory
+Lung cancer,Cancer
+Lyme disease,Infectious diseases
+MASH,Metabolic
+MASLD,Metabolic
+Macular Hole,Vision
+Medial Collateral Ligament (MCL) Injuries,Injuries
+Melanoma,Cancer
+Melasma,Skin
+Meningitis,Immune system
+Menopause-Related Conditions,Female
+Menstrual Disorders,Female
+Metabolic syndrome,Metabolic
+Migraine,Pain
+Mononucleosis,Fatigue
+Mosquito Bites,Bites
+Mouth Ulcers (Canker Sores),Dental
+Multiple Sclerosis,Immune system
+Muscle cramps,Pain
+Myopia (Nearsightedness),Vision
+Narcolepsy,Sleep
+Night Terrors,Sleep
+Non-24h sleep disorders,Sleep
+Occupational Lung Diseases,Respiratory
+Orthodontic Problems (Post-Braces),Dental
+Osgood-Schlatter Disease,Injuries
+Osteoarthritis,Immune system
+Osteochondritis Dissecans ,Injuries
+Osteomyelitis (bone infection),Infectious diseases
+Osteopororsis,Immune system
+Ovarian Cancer,Cancer
+Overtraining Syndrome,Injuries
+Overuse Injuries,Injuries
+Overweight and Obesity,Metabolic
+PCOS-Related Hair Loss,Hair
+POTS,Fatigue
+PTSD,Brain Health
+Pancreatitis,Digestive
+Panic disorder,Brain Health
+Parkinson's Disease,Neurodegenerative
+Patellar Tendinitis,Injuries
+Patellofemoral pain,Injuries
+"Pelvic pain (e.g., sacroiliac joint dysfunction)",Pain
+Peptic Ulcers,Digestive
+Periodic Limb Movement Disorder (PLMD),Sleep
+Periodontitis,Dental
+"Peripheral neuropathy (e.g., diabetic neuropathy)",Pain
+Photophobia,Vision
+Plantar Fasciitis,Injuries
+Pneumoconiosis,Respiratory
+Pneumonia,Cold
+Polycystic Ovary Syndrome (PCOS),Female
+Post-Covid syndrome,Fatigue
+Post-Covid syndrome,Fatigue
+Postherpetic neuralgia (shingles pain),Pain
+Postpartum Hair Loss,Hair
+Postpartum depression,Brain Health
+Prediabetes,Metabolic
+Premenstrual Dysphoric Disorder (PMDD),Female
+Premenstrual Syndrome (PMS),Female
+Presbyopia,Vision
+Prostate cancer,Cancer
+Psoriasis,Skin
+Pulmonary Embolism,Respiratory
+Pulmonary Fibrosis,Respiratory
+Pulmonary Hypertension,Metabolic
+REM Sleep Behavior Disorder (RBD),Sleep
+Restless Legs Syndrome,Sleep
+Retinal Detachment,Vision
+Retinitis Pigmentosa,Vision
+Rheumatoid arthritis,Immune system
+Ringworm (Tinea),Skin
+Ringworm (Tinea),Skin
+Rosacea,Skin
+Rotator Cuff Tears,Injuries
+Sarcoidosis,Immune system
+Scabies,Parasitic
+Sciatica (nerve root compression),Pain
+Scleroderma,Skin
+Scoliosis,Pain
+Seasonal Affective Disorders,Brain Health
+Seborrheic Dermatitis,Skin
+Sepsis,Immune system
+Sever’s disease,Injuries
+Shift Work Disorder:,Sleep
+Shin Splints,Injuries
+Shoulder Dislocations,Injuries
+Sinus Infections,Cold
+Skin Tags,Skin
+Sleep Apnea,Sleep
+Sleep Bruxism,Sleep
+Sleepwalking,Sleep
+Small Intestinal Bacterial Overgrowth (SIBO),Digestive
+Spider Bites,Bites
+Spinal stenosis,Injuries
+Spondylolysis and Spondylolisthesis,Injuries
+Sprains and Strains,Injuries
+Squamous Cell Carcinoma,Cancer
+Strabismus,Vision
+Strep throat,Immune system
+Stress Fractures,Injuries
+Stroke,Brain
+Sun burn,Skin
+Swimmer’s Ear (Otitis Externa),Infectious diseases
+Syphilis,STD
+Systemic Lupus Erythematosus (SLE),Immune system
+Tennis elbow (lateral epicondylitis),Injuries
+Tension headache,Pain
+Tick Bites,Bites
+Tonsillitis,Immune system
+Tooth Sensitivity,Dental
+Torn Meniscus,Injuries
+Trichomoniasis,Parasitic
+Trigeminal neuralgia,Pain
+Tuberculosis,Infectious diseases
+Type 1 Diabetes,Metabolic
+Type 2 diabetes,Metabolic
+Urinary Tract Infections (UTIs),Female
+Uveitis,Vision
+Vasculitis,Immune system
+Vertigo,Pain
+Visual Migraine (Ocular Migraine),Vision
+Vitiligo,Skin
+Warts,Skin
+Wisdom Teeth Issues,Dental
+Zollinger-Ellison Syndrome,Digestive
