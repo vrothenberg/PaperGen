@@ -26,13 +26,17 @@ def save_results(
         topic (str): The name of the topic associated with the article.
         output_dir (str): The directory where the file will be saved.
     """
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    filename = f"{sanitize_filename(topic)}_{timestamp}.json"
-    filepath = os.path.join(output_dir, filename)
-    os.makedirs(output_dir, exist_ok=True)
-    with open(filepath, 'w') as f:
-        f.write(data)
-    logger.info(f"[{index+1}] Results saved to: {filepath}")
+    try:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{sanitize_filename(topic)}_{timestamp}.json"
+        filepath = os.path.join(output_dir, filename)
+        os.makedirs(output_dir, exist_ok=True)
+        with open(filepath, 'w') as f:
+            f.write(data)
+        logger.info(f"[{index+1}] Results saved to: {filepath}")
+    except Exception as e:
+        logger.error(f"[{index+1}] Error writing to: {filepath}")
+        logger.error(e)
 
 
 async def retry_with_backoff(
