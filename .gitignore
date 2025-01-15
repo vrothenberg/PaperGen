@@ -10,5 +10,7 @@ data/
 __pycache__
 *.ipynb_checkpoints
 *.sh
+*.log
+uptodate_index/
 
 project_explorer.py
