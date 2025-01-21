@@ -1,0 +1,294 @@
+Condition,Alternative Name,Category,Tags
+Food Allergy,,Allergies,Immune System; Food Reactions; Dietary Triggers; Hypersensitivity
+Allergic Rhinitis,Hay Fever,Allergies,Respiratory Health; Immune System; Environmental Triggers; Nasal Conditions
+Drug Allergies,,Allergies,Immune System; Medication Reactions; Hypersensitivity
+Atopic Dermatitis,Eczema,Allergies,Skin Health; Immune System; Skin Disorders; Hypersensitivity
+Contact Dermatitis,,Allergies,Skin Health; Immune System; Skin Disorders; Hypersensitivity
+Ankylosing Spondylitis,,Autoimmune & Inflammatory,Joint Health; Immune System; Skeletal System; Chronic Pain; Inflammatory Disorders
+Gout,,Autoimmune & Inflammatory,Joint Health; Metabolic Health; Uric Acid Disorders; Chronic Pain; Inflammatory Disorders
+Guillain-Barre Syndrome,,Autoimmune & Inflammatory,Neurological; Immune System; Nerve Disorders; Inflammatory Disorders
+Multiple Sclerosis,MS,Autoimmune & Inflammatory,Neurological; Immune System; Nerve Disorders; Chronic Conditions; Inflammatory Disorders
+Osteoarthritis,,Autoimmune & Inflammatory,Joint Health; Musculoskeletal; Aging; Chronic Pain; Degenerative Disorders; Inflammatory Disorders
+Rheumatoid Arthritis,,Autoimmune & Inflammatory,Joint Health; Immune System; Chronic Pain; Inflammatory Disorders
+Sarcoidosis,,Autoimmune & Inflammatory,Immune System; Multi-System Disorders; Inflammatory Disorders; Organ Health
+Scleroderma,,Autoimmune & Inflammatory,Skin Health; Immune System; Connective Tissue Disorders; Inflammatory Disorders
+Systemic Lupus Erythematosus,SLE,Autoimmune & Inflammatory,Immune System; Multi-System Disorders; Chronic Conditions; Inflammatory Disorders
+Vasculitis,,Autoimmune & Inflammatory,Cardiovascular; Immune System; Blood Vessel Disorders; Inflammatory Disorders
+Ant Bites,,Bites & Stings,Insect Interactions; Skin Reactions
+Bedbug Bites,,Bites & Stings,Insect Interactions; Skin Reactions; Pest Control
+Flea Bites,,Bites & Stings,Insect Interactions; Skin Reactions; Pet Health
+Horsefly Bites,,Bites & Stings,Insect Interactions; Skin Reactions
+Mosquito Bites,,Bites & Stings,Insect Interactions; Skin Reactions; Vector-Borne Diseases
+Spider Bites,,Bites & Stings,Insect Interactions; Skin Reactions; Venomous Bites
+Tick Bites,,Bites & Stings,Insect Interactions; Skin Reactions; Vector-Borne Diseases
+Anemia,,Blood Health,Iron Deficiency; Fatigue; Hematology
+Hemophilia,,Blood Health,Bleeding Disorders; Clotting Disorders; Hematology
+Thrombocytopenia,Low Platelet Count,Blood Health,Bleeding Disorders; Clotting Disorders; Hematology
+Polycythemia Vera,,Blood Health,Blood Disorders; Bone Marrow Disorders; Hematology
+Osteoporosis,,Bone Health,Skeletal System; Aging; Calcium Metabolism; Bone Density
+Osteomalacia,Soft Bone Disease,Bone Health,Skeletal System; Vitamin D Deficiency; Calcium Metabolism; Bone Density
+Osteogenesis Imperfecta,Brittle Bone Disease,Bone Health,Skeletal System; Genetic Conditions; Collagen Disorders
+Paget's Disease of Bone,Osteitis Deformans,Bone Health,Skeletal System; Bone Remodeling Disorders
+Bone Fractures,,Bone Health,Musculoskeletal; Skeletal System; Injury; Trauma
+Basal Cell Carcinoma,,Cancer,Skin Cancer; Oncology; Skin Health
+Breast Cancer,,Cancer,Oncology; Women's Health; Tumors
+Cervical Cancer,,Cancer,Oncology; Women's Health; HPV
+Colorectal Cancer,,Cancer,Oncology; Digestive Health; Tumors
+Liver Cancer,,Cancer,Oncology; Liver Health; Tumors
+Lung Cancer,,Cancer,Oncology; Respiratory Health; Tumors
+Melanoma,,Cancer,Skin Cancer; Oncology; Skin Health
+Ovarian Cancer,,Cancer,Oncology; Women's Health; Tumors
+Prostate Cancer,,Cancer,Oncology; Men's Health; Tumors
+Squamous Cell Carcinoma,,Cancer,Skin Cancer; Oncology; Skin Health
+Leukemia,Blood Cancer,Cancer,Oncology; Blood Health; Blood Disorders
+Cardiac Arrhythmia,,Cardiovascular,Heart Health; Electrical System Disorders; Heart Rhythm
+Coronary Artery Disease,,Cardiovascular,Heart Health; Circulation; Arterial Health
+Heart Failure,,Cardiovascular,Heart Health; Pump Function; Circulation
+Hypertension,High Blood Pressure,Cardiovascular,Heart Health; Blood Pressure; Circulation
+Chronic Fatigue Syndrome,,Chronic Conditions,Fatigue; Energy Disorders; Immune System
+Fibromyalgia,,Chronic Conditions,Chronic Pain; Musculoskeletal; Nerve Pain; Pain Management
+Post-COVID Syndrome,Long COVID,Chronic Conditions,Post-Viral Syndrome; Recovery; Immune System
+Anal Fissures,,Digestive Health,Gastrointestinal; Rectal Health; Bowel Movements
+Appendicitis,,Digestive Health,Gastrointestinal; Abdominal Pain; Appendix
+Barrett's Esophagus,,Digestive Health,Gastrointestinal; Esophageal Health; Acid Reflux
+Celiac Disease,,Digestive Health,Gastrointestinal; Immune System; Gluten Intolerance; Nutrient Absorption
+Cholecystitis,,Digestive Health,Gallbladder Disease; Gallstones; Abdominal Pain
+Colitis,,Digestive Health,Gastrointestinal; Inflammatory Bowel Disease; Colon Health
+Constipation,,Digestive Health,Gastrointestinal; Bowel Movements; Stool Consistency
+Crohn's Disease,Intestinal Inflammation,Digestive Health,Gastrointestinal; Inflammatory Bowel Disease; Immune System
+Diarrhea,,Digestive Health,Gastrointestinal; Bowel Movements; Stool Consistency
+Diverticulitis,,Digestive Health,Gastrointestinal; Colon Health; Abdominal Pain
+Esophagitis,,Digestive Health,Gastrointestinal; Esophageal Health; Acid Reflux
+Functional Dyspepsia,,Digestive Health,Gastrointestinal; Indigestion; Abdominal Pain
+Gallbladder Disease,,Digestive Health,Gallbladder; Bile Duct Disorders; Fat Digestion
+Gastritis,,Digestive Health,Gastrointestinal; Stomach Inflammation; Abdominal Pain
+Gastroenteritis,Stomach Flu,Digestive Health,Gastrointestinal; Infection; Nausea and Vomiting
+Gastroesophageal Reflux Disease,GERD,Digestive Health,Gastrointestinal; Acid Reflux; Esophageal Health
+Gastroparesis,,Digestive Health,Gastrointestinal; Stomach Emptying; Nausea and Vomiting
+Hemorrhoids,Piles,Digestive Health,Gastrointestinal; Rectal Health; Vein Health
+Inflammatory Bowel Disease,IBD,Digestive Health,Gastrointestinal; Immune System; Chronic Inflammation
+Irritable Bowel Syndrome,IBS,Digestive Health,Gastrointestinal; Bowel Disorders; Abdominal Pain
+Lactose Intolerance,,Digestive Health,Gastrointestinal; Dairy Sensitivity; Digestive Enzymes
+Pancreatitis,,Digestive Health,Pancreas; Enzyme Disorders; Abdominal Pain
+Peptic Ulcer Disease,PUD,Digestive Health,Gastrointestinal; Stomach Ulcers; Acid Reflux
+Small Intestinal Bacterial Overgrowth,SIBO,Digestive Health,Gastrointestinal; Microbiome; Nutrient Absorption
+Zollinger-Ellison Syndrome,,Digestive Health,Gastrointestinal; Stomach Acid; Hormone Disorders; Tumors
+Otitis Externa,Swimmer's Ear,Ear & Throat Health,Ear Infection; Ear Canal; Hearing
+Tonsillitis,,Ear & Throat Health,Throat Infection; Throat Inflammation; Lymphatic System
+Eustachian Tube Dysfunction,Eustachian Tube Disorder,Ear & Throat Health,Ear Pressure; Hearing; Middle Ear
+Laryngitis,,Ear & Throat Health,Voice Disorders; Vocal Cord Inflammation
+Tympanic Membrane (Eardrum) Perforation,,Ear & Throat Health,Ear Injury; Hearing Loss; Middle Ear
+Eustachian Tube Dysfunction,ETD,Ear & Throat Health,Ear Pressure; Hearing; Middle Ear
+Hashimoto's Thyroiditis,Autoimmune Thyroiditis,Endocrine & Metabolic,Thyroid Health; Immune System; Hormone Disorders
+Hyperthyroidism,,Endocrine & Metabolic,Thyroid Health; Metabolism; Hormone Disorders
+Hypothyroidism,,Endocrine & Metabolic,Thyroid Health; Metabolism; Hormone Disorders
+Type 1 Diabetes,,Endocrine & Metabolic,Diabetes; Blood Sugar; Insulin; Pancreas
+Type 2 Diabetes,,Endocrine & Metabolic,Diabetes; Blood Sugar; Insulin Resistance; Metabolism
+Age-related Macular Degeneration,AMD,Eye Health,Vision Loss; Retina; Aging
+Amblyopia,,Eye Health,Vision Development; Eye Alignment
+Astigmatism,,Eye Health,Vision Clarity; Cornea; Refractive Error
+Blepharitis,,Eye Health,Eyelid Inflammation; Eye Irritation
+Cataracts,,Eye Health,Vision Clarity; Lens; Aging
+Conjunctivitis,,Eye Health,Eye Infection; Eye Inflammation; Eye Redness
+Corneal Abrasion,,Eye Health,Eye Injury; Cornea; Eye Pain
+Diabetic Retinopathy,,Eye Health,Diabetes Complications; Retina; Blood Vessels
+Dry Eye Syndrome,Dry Eye,Eye Health,Eye Moisture; Tear Production; Eye Irritation
+Eye Floaters,,Eye Health,Vitreous; Vision; Aging
+Glaucoma,,Eye Health,Eye Pressure; Optic Nerve; Vision Loss
+Hyperopia,Farsightedness,Eye Health,Refractive Error; Vision Clarity
+Keratitis,,Eye Health,Cornea; Eye Infection; Eye Inflammation
+Keratoconus,,Eye Health,Cornea; Vision Distortion; Eye Shape
+Macular Hole,,Eye Health,Retina; Vision Loss; Eye Structure
+Myopia,Nearsightedness,Eye Health,Refractive Error; Vision Clarity
+Photophobia,,Eye Health,Light Sensitivity; Eye Pain; Vision
+Presbyopia,,Eye Health,Aging; Lens; Near Vision
+Retinal Detachment,,Eye Health,Retina; Vision Emergency; Eye Structure
+Retinitis Pigmentosa,,Eye Health,Genetic Conditions; Retina; Vision Loss
+Strabismus,,Eye Health,Eye Alignment; Vision Development; Muscle Control
+Uveitis,,Eye Health,Eye Inflammation; Immune System; Eye Structure
+Cystic Fibrosis,,Genetic Conditions,Respiratory Health; Lung Function; Mucus Disorders
+Huntington's Disease,,Genetic Conditions,Neurological; Movement Disorders; Cognitive Decline
+Sickle Cell Disease,,Genetic Conditions,Blood Health; Red Blood Cells; Pain Crises
+Marfan Syndrome,,Genetic Conditions,Connective Tissue; Cardiovascular; Skeletal System
+Yeast Infection,Candidiasis,Infections,Fungal Infection; Microbiome; Skin Health; Vaginal Health
+Chickenpox and Shingles,Varicella-Zoster Virus Infection,Infections,Viral Infection; Skin Rash; Nerve Pain
+Clostridioides difficile (C. diff) Infection,,Infections,Bacterial Infection; Gastrointestinal; Antibiotic-Associated
+Common Cold,,Infections,Viral Infection; Respiratory Health; Upper Respiratory Infection
+HIV/AIDS,,Infections,Viral Infection; Immune System; Sexual Health
+Hepatitis B,HBV,Infections,Viral Infection; Liver Health; Liver Inflammation
+Hepatitis C,HCV,Infections,Viral Infection; Liver Health; Liver Inflammation
+Herpes Simplex Virus Infection,HSV,Infections,Viral Infection; Skin Health; Oral Health; Sexual Health
+Human Papillomavirus (HPV) Infection,,Infections,Viral Infection; Sexual Health; Cervical Health; Warts
+Influenza,Flu,Infections,Viral Infection; Respiratory Health; Fever; Body Aches
+Lyme Disease,,Infections,Bacterial Infection; Tick-Borne; Joint Pain; Neurological
+Meningitis,,Infections,Brain Inflammation; Spinal Cord; Fever; Headache
+Mononucleosis,Mono,Infections,Viral Infection; Fatigue; Lymph Nodes; Epstein-Barr Virus
+Osteomyelitis,Bone Infection,Infections,Bacterial Infection; Bone Health; Skeletal System
+Sepsis,,Infections,Blood Infection; Immune Response; Systemic Illness
+Streptococcal Pharyngitis,Strep throat,Infections,Bacterial Infection; Throat Infection; Throat Pain
+Tuberculosis,,Infections,Bacterial Infection; Respiratory Health; Lung Infection
+Chronic Kidney Disease,CKD,Liver Health,Kidney Function; Kidney Disease; Renal Health
+Cirrhosis,,Liver Health,Liver Disease; Scarring; Liver Function
+Hepatitis,,Liver Health,Liver Inflammation; Viral Infection; Liver Function
+Metabolic-Associated Steatohepatitis,,Liver Health,Fatty Liver Disease; Liver Inflammation; Metabolism
+Metabolic-Associated Steatotic Liver Disease,,Liver Health,Fatty Liver Disease; Metabolism; Liver Function
+Attention-Deficit/Hyperactivity Disorder,ADHD,Mental Health,Neurodevelopmental; Focus; Hyperactivity
+Anxiety Disorder,,Mental Health,Anxiety; Mood Disorders; Mental Wellness
+Asperger's Syndrome,,Mental Health,Neurodevelopmental; Social Interaction; Autism Spectrum
+Autism Spectrum Disorder,,Mental Health,Neurodevelopmental; Social Interaction; Communication
+Bipolar Disorder,,Mental Health,Mood Disorders; Mania; Depression
+Depression,,Mental Health,Mood Disorders; Mental Wellness; Emotional Health
+Loneliness,,Mental Health,Mental Wellness; Social Isolation; Emotional Health
+Post-traumatic Stress Disorder,PTSD,Mental Health,Trauma; Anxiety; Stress Response
+Panic Disorder,,Mental Health,Anxiety; Panic Attacks; Fear Response
+Postpartum Depression,,Mental Health,Women's Health; Postpartum; Mood Disorders
+Seasonal Affective Disorder,,Mental Health,Mood Disorders; Light Exposure; Seasonal Changes
+Childhood Obesity,,Metabolic Health,Weight Management; Pediatrics; Metabolism
+Dyslipidemia,,Metabolic Health,Cholesterol; Lipid Disorders; Cardiovascular
+Metabolic Syndrome,,Metabolic Health,Metabolism; Insulin Resistance; Cardiovascular
+Obesity,,Metabolic Health,Weight Management; Metabolism; BMI
+Prediabetes,,Metabolic Health,Blood Sugar; Insulin Resistance; Diabetes Prevention
+Achilles Tendinitis,Achilles Tendinopathy,Musculoskeletal,Tendon Injury; Heel Pain; Sports Medicine
+Acute fractures,,Musculoskeletal,Bone Injury; Trauma; Skeletal System
+Ankle Sprain,,Musculoskeletal,Ligament Injury; Ankle; Sports Medicine
+Anterior Cruciate Ligament Tear,ACL Tear,Musculoskeletal,Knee Injury; Ligament Injury; Sports Medicine
+Bruises,Contusion,Musculoskeletal,Soft Tissue Injury; Trauma; Skin Discoloration
+Burns,,Musculoskeletal,Skin Injury; Thermal Injury; Tissue Damage
+Bursitis,,Musculoskeletal,Joint Inflammation; Pain; Bursa
+Frostbite,,Musculoskeletal,Cold Injury; Tissue Damage; Skin Injury
+Medial Epicondylitis,Golfer's Elbow,Musculoskeletal,Elbow Pain; Tendon Injury; Forearm
+Growth Plate Fracture,,Musculoskeletal,Pediatrics; Bone Injury; Growth and Development
+Hamstring Injury,,Musculoskeletal,Muscle Strain; Thigh; Sports Medicine
+Herniated Disc,,Musculoskeletal,Spine; Nerve Pain; Back Pain
+Iliotibial Band Syndrome,,Musculoskeletal,Knee Pain; Runners; Thigh
+Glenoid Labrum Tear,,Musculoskeletal,Shoulder Injury; Joint Instability; Sports Medicine
+Little League Elbow,,Musculoskeletal,Pediatrics; Elbow Pain; Overuse Injury
+Little League Shoulder,,Musculoskeletal,Pediatrics; Shoulder Pain; Overuse Injury
+Medial Collateral Ligament Injury,,Musculoskeletal,Knee Injury; Ligament Injury; Sports Medicine
+Muscle Cramp,,Musculoskeletal,Muscle Spasm; Pain; Electrolyte Imbalance
+Osgood-Schlatter Disease,,Musculoskeletal,Pediatrics; Knee Pain; Growth and Development
+Osteochondritis Dissecans,,Musculoskeletal,Joint Injury; Cartilage; Bone
+Overtraining Syndrome,,Musculoskeletal,Sports Medicine; Fatigue; Performance Decline
+Repetitive Strain Injury,,Musculoskeletal,Overuse Injury; Pain; Inflammation
+Patellar Tendinitis,,Musculoskeletal,Knee Pain; Tendon Injury; Sports Medicine
+Patellofemoral Pain Syndrome,PFPS,Musculoskeletal,Knee Pain; Cartilage; Alignment
+Sacroiliac Joint Dysfunction,Pelvic Pain,Musculoskeletal,Pelvis; Lower Back Pain; Joint Pain
+Plantar Fasciitis,,Musculoskeletal,Foot Pain; Heel Pain; Foot Arch
+Rotator Cuff Tear,,Musculoskeletal,Shoulder Injury; Tendon Injury; Sports Medicine
+Scoliosis,,Musculoskeletal,Spine; Curvature; Posture
+Sever's Disease,Calcaneal Apophysitis,Musculoskeletal,Pediatrics; Heel Pain; Growth and Development
+Medial Tibial Stress Syndrome,Shin Splints,Musculoskeletal,Shin Pain; Runners; Overuse Injury
+Shoulder Dislocation,,Musculoskeletal,Shoulder Injury; Joint Instability; Trauma
+Spinal Stenosis,,Musculoskeletal,Spine; Nerve Compression; Aging
+Spondylolisthesis,,Musculoskeletal,Spine; Vertebral Slippage; Back Pain
+Sprains and Strains,,Musculoskeletal,Ligament Injury; Muscle Injury; Joint Pain
+Stress Fracture,,Musculoskeletal,Bone Injury; Overuse Injury; Runners
+Lateral Epicondylitis,Tennis Elbow,Musculoskeletal,Elbow Pain; Tendon Injury; Forearm
+Meniscus Tear,,Musculoskeletal,Knee Injury; Cartilage Injury; Sports Medicine
+Alzheimer's Disease,,Neurological,Dementia; Memory Loss; Cognitive Decline; Aging
+Carpal Tunnel Syndrome,,Neurological,Nerve Compression; Hand Pain; Wrist
+Cervical Radiculopathy,,Neurological,Neck Pain; Nerve Pain; Spine
+Cluster Headache,,Neurological,Headache; Pain; Neurological
+Concussions,,Neurological,Head Injury; Brain Injury; Sports Medicine
+ICU Delirium,,Neurological,Critical Care; Confusion; Cognitive Function
+Lumbar Radiculopathy,,Neurological,Back Pain; Nerve Pain; Spine
+Migraine Headache,,Neurological,Headache; Pain; Nausea; Sensory Sensitivity
+Postural Orthostatic Tachycardia Syndrome,POTS,Neurological,Autonomic Dysfunction; Dizziness; Heart Rate
+Parkinson's Disease,,Neurological,Movement Disorders; Tremor; Rigidity
+Peripheral Neuropathy,,Neurological,Nerve Damage; Pain; Numbness; Tingling
+Postherpetic Neuralgia,Shingles Pain,Neurological,Nerve Pain; Viral Infection; Skin Rash
+Sciatica,,Neurological,Nerve Pain; Back Pain; Leg Pain
+Stroke,,Neurological,Brain Injury; Blood Flow; Neurological Deficits
+Tension Headache,,Neurological,Headache; Pain; Muscle Tension
+Trigeminal Neuralgia,,Neurological,Facial Pain; Nerve Pain; Trigeminal Nerve
+Vertigo,,Neurological,Dizziness; Balance Disorders; Inner Ear
+Visual Migraine,Ocular Migraine,Neurological,Migraine; Visual Disturbances; Headache
+Halitosis,Bad Breath,Oral Health,Oral Hygiene; Mouth Odor; Dental
+Cavities,Tooth Decay,Oral Health,Dental; Tooth Enamel; Oral Hygiene
+Dental Abscess,,Oral Health,Tooth Infection; Pain; Swelling
+Dry Mouth,Xerostomia,Oral Health,Saliva; Oral Discomfort; Hydration
+Gingivitis,,Oral Health,Gum Disease; Gum Inflammation; Oral Hygiene
+Mouth Ulcers,Canker Sores,Oral Health,Oral Pain; Mouth Sores; Oral Lesions
+Orthodontic Relapse,,Oral Health,Teeth Alignment; Braces; Post-Orthodontic Care
+Periodontitis,,Oral Health,Gum Disease; Bone Loss; Oral Hygiene
+Dentin Hypersensitivity,Tooth Sensitivity,Oral Health,Tooth Pain; Nerve Sensitivity; Enamel Erosion
+Wisdom Teeth Impaction,,Oral Health,Tooth Eruption; Pain; Oral Surgery
+Malaria,,Parasitic Conditions,Parasite; Mosquito-Borne; Tropical Diseases; Fever
+Toxoplasmosis,,Parasitic Conditions,Parasite; Foodborne; Congenital Infection; Cats
+Giardiasis,,Parasitic Conditions,Parasite; Waterborne; Diarrhea; Gastrointestinal
+Trichinosis,,Parasitic Conditions,Parasite; Foodborne; Muscle Pain; Undercooked Meat
+Lice Infestation,Pediculosis,Parasitic Conditions,Parasite; Skin Irritation; Hair Infestation; Nits
+Scabies,,Parasitic Conditions,Parasite; Skin Infestation; Itching; Skin Rash
+Endometriosis,,Reproductive Health,Women's Health; Pelvic Pain; Menstrual Disorders; Uterus
+Infertility,,Reproductive Health,Fertility; Conception; Reproductive System
+Menopause,Menopausal Symptoms,Reproductive Health,Women's Health; Hormonal Changes; Aging
+Menstrual Disorders,,Reproductive Health,Women's Health; Menstrual Cycle; Periods; Cramps
+Polycystic Ovary Syndrome (PCOS) Related Hair Loss,,Reproductive Health,Hormonal Imbalance; Hair Loss; Androgens; Women's Health
+Polycystic Ovary Syndrome,PCOS,Reproductive Health,Women's Health; Hormonal Imbalance; Ovarian Cysts; Insulin Resistance
+Premenstrual Dysphoric Disorder,,Reproductive Health,Women's Health; Mood Disorders; Menstrual Cycle; Premenstrual
+Premenstrual Syndrome,,Reproductive Health,Women's Health; Mood Changes; Menstrual Cycle; Premenstrual
+Acute Respiratory Distress Syndrome,ARDS,Respiratory,Lung Injury; Critical Care; Oxygenation
+Asthma,,Respiratory,Airway Inflammation; Bronchoconstriction; Breathing Difficulty
+Bronchitis,,Respiratory,Airway Inflammation; Cough; Mucus Production
+Chronic Cough,,Respiratory,Cough; Airway Irritation; Respiratory System
+Chronic Obstructive Pulmonary Disease,COPD,Respiratory,Airflow Limitation; Lung Damage; Smoking
+Lung Abscess,,Respiratory,Lung Infection; Pus; Lung Tissue
+Occupational Lung Disease,,Respiratory,Workplace Exposure; Lung Disease; Environmental Health
+Pneumoconiosis,,Respiratory,Dust Exposure; Lung Disease; Environmental Health
+Pneumonia,,Respiratory,Lung Infection; Alveoli; Fever; Cough
+Pulmonary Embolism,,Respiratory,Blood Clot; Lung; Circulation
+Pulmonary Fibrosis,,Respiratory,Lung Scarring; Lung Tissue; Breathing Difficulty
+Pulmonary Hypertension,,Respiratory,High Blood Pressure; Lung Arteries; Heart
+Sinusitis,Sinus Infection,Respiratory,Sinus Inflammation; Nasal Congestion; Facial Pain
+Bacterial Vaginosis,BV,Sexual & Reproductive Health,Vaginal Infection; Vaginal Flora; Vaginal Discharge; Women's Health
+Chlamydia Infection,,Sexual & Reproductive Health,Sexually Transmitted Infection; STI; Reproductive Health
+Gonorrhea,,Sexual & Reproductive Health,Sexually Transmitted Infection; STI; Reproductive Health
+Syphilis,,Sexual & Reproductive Health,Sexually Transmitted Infection; STI; Reproductive Health
+Trichomoniasis,,Sexual & Reproductive Health,Sexually Transmitted Infection; STI; Vaginal Infection; Parasite
+Acne Vulgaris,Acne Vulgaris,Skin Health,Acne; Pimples; Skin Blemishes; Pores
+Actinic Keratosis,,Skin Health,Precancerous; Sun Damage; Skin Lesions
+Albinism,,Skin Health,Pigmentation Disorder; Melanin; Genetic Conditions
+Alopecia Areata,,Skin Health,Hair Loss; Autoimmune; Immune System; Hair Follicles
+Athlete's Foot,Tinea Pedis,Skin Health,Fungal Infection; Foot; Itching; Skin Rash
+Boils,Furuncle,Skin Health,Skin Infection; Hair Follicle; Pus; Pain
+Cellulitis,,Skin Health,Skin Infection; Bacterial Infection; Skin Inflammation; Soft Tissue
+Contact Dermatitis,,Skin Health,Skin Inflammation; Allergic Reaction; Irritant; Rash
+Cystic Acne,,Skin Health,Acne; Severe Acne; Skin Inflammation; Nodules
+Eczema,Atopic Dermatitis,Skin Health,Skin Inflammation; Itching; Rash; Dry Skin
+Folliculitis,,Skin Health,Hair Follicle Inflammation; Bacterial Infection; Ingrown Hairs; Skin Bumps
+Alopecia,Hair Loss,Skin Health,Hair Thinning; Hair Follicles; Hair Cycle
+Urticaria,Hives,Skin Health,Skin Reaction; Itching; Welts; Allergic Reaction
+Hyperhidrosis,,Skin Health,Excessive Sweating; Sweat Glands; Perspiration
+Tinea Cruris,Jock Itch,Skin Health,Fungal Infection; Groin; Itching; Skin Rash
+Keloid,,Skin Health,Scarring; Overgrowth; Skin Injury; Wound Healing
+Keratosis Pilaris,,Skin Health,Skin Bumps; Keratin; Dry Skin; Arms
+Melasma,,Skin Health,Pigmentation Disorder; Skin Discoloration; Face; Hormones
+Postpartum Hair Loss,,Skin Health,Hair Loss; Postpartum; Hormonal Changes; Hair Cycle; Women's Health
+Psoriasis,,Skin Health,Skin Inflammation; Autoimmune; Plaques; Itching
+Ringworm,Tinea,Skin Health,Fungal Infection; Skin Rash; Itching; Circular Rash
+Rosacea,,Skin Health,Facial Redness; Skin Inflammation; Flushing; Skin Sensitivity
+Seborrheic Dermatitis,,Skin Health,Dandruff; Scalp; Skin Flakes; Sebum
+Skin Tag,Acrochordon,Skin Health,Skin Growth; Benign; Skin Friction; Skin Folds
+Sunburn,,Skin Health,Sun Damage; UV Radiation; Skin Burn; Skin Redness
+Vitiligo,,Skin Health,Pigmentation Disorder; Depigmentation; Autoimmune; Melanin
+Wart,,Skin Health,Viral Infection; HPV; Skin Growth; Skin Lesions
+Central Sleep Apnea,CSA,Sleep Disorders,Sleep-Disordered Breathing; Apnea; Brain Signaling; Sleep
+Delayed Sleep Phase Syndrome,,Sleep Disorders,Circadian Rhythm; Sleep Timing; Sleep-Wake Cycle
+Familial Advanced Sleep Phase Syndrome,,Sleep Disorders,Circadian Rhythm; Sleep Timing; Sleep-Wake Cycle; Genetic
+Idiopathic Hypersomnia,,Sleep Disorders,Excessive Sleepiness; Sleep Duration; Unknown Cause
+Insomnia,,Sleep Disorders,Difficulty Sleeping; Sleep Initiation; Sleep Maintenance
+Narcolepsy,,Sleep Disorders,Excessive Daytime Sleepiness; Sleep Attacks; Cataplexy
+Night Terrors,,Sleep Disorders,Sleep Disruption; Fear; Autonomic Arousal; Children
+Non-24-Hour Sleep-Wake Disorder,,Sleep Disorders,Circadian Rhythm; Sleep-Wake Cycle; Blindness
+Periodic Limb Movement Disorder,PLMD,Sleep Disorders,Leg Movements; Sleep Disruption; Restlessness
+REM Sleep Behavior Disorder,,Sleep Disorders,REM Sleep; Acting Out Dreams; Sleep Disruption
+Restless Legs Syndrome,,Sleep Disorders,Leg Discomfort; Urge to Move; Sleep Disruption
+Shift Work Sleep Disorder,,Sleep Disorders,Circadian Rhythm; Work Schedule; Sleep-Wake Cycle
+Sleep Apnea,,Sleep Disorders,Sleep-Disordered Breathing; Apnea; Oxygen Deprivation; Snoring
+Sleep Bruxism,Teeth Grinding,Sleep Disorders,Teeth Clenching; Jaw Pain; Sleep; Oral Health
+Sleepwalking,,Sleep Disorders,Sleep Disruption; Ambulation; Unconscious Behavior; Children
+Interstitial Cystitis,,Urinary Health,Bladder Pain; Urinary Frequency; Pelvic Pain; Bladder
+Urinary Tract Infection,UTI,Urinary Health,Bacterial Infection; Urinary Frequency; Urinary Urgency; Bladder Infection
+Nephrolithiasis,Kidney Stones,Urinary Health,Kidney; Urinary Tract; Mineral Deposits; Pain
+Urinary Incontinence,,Urinary Health,Bladder Control; Urine Leakage; Urinary System
+Prostatitis,,Urinary Health,Prostate Inflammation; Pelvic Pain; Urinary Symptoms; Men's Health
