@@ -9,7 +9,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.runnables import RunnableSequence
-from langsmith import wrappers, traceable
+# from langsmith import wrappers, traceable
 
 from src.models import Article, SearchQuery, SearchQueryList, Paper
 
@@ -42,7 +42,7 @@ async def generate_outline_with_retries(
 
         # Wait before retrying
         if attempt < MAX_RETRIES:
-            logger.info(f"[{index+1}] Retrying in {RETRY_DELAY} seconds...")
+            logger.info(f"[{index+1}] Retrying in {RETRY_DELAY ** attempt} seconds...")
             await asyncio.sleep(RETRY_DELAY ** attempt)
         else:
             logger.error(f"[{index+1}] Max retries reached. Aborting.")
@@ -50,7 +50,7 @@ async def generate_outline_with_retries(
     raise Exception
 
 
-@traceable(run_type="chain")
+# @traceable(run_type="chain")
 async def generate_outline(
     index: int,
     condition: str,
@@ -61,7 +61,7 @@ async def generate_outline(
 ) -> Article:
     """
     Generates a detailed knowledgebase article outline on a given topic using a generative model.
-    Leverages LangChain's built-in retries and error handling.
+    Focuses on content and structure, without fabricating references or links.
     """
     parser = PydanticOutputParser(pydantic_object=Article)
     # Create the prompt template with format instructions
@@ -104,13 +104,16 @@ For each section, provide the following:
 - **Content**: Detailed information relevant to the section. Follow these guidelines:
 
     - Maintain a professional yet approachable tone.
-    - Include hypertext links to relevant sources where appropriate, and format them in the "References" section in an APA-like style.
-    - Where possible, include statistics, research findings, or notable insights to make the article credible and informative.
+    - **Do not include any placeholder or dummy references. The References section should be initially empty.**
+    - **Do not hallucinate or fabricate any URLs or links.**
+    - Where possible, include statistics, research findings, or notable insights to make the article credible and informative. These should be based on your general knowledge and not attributed to specific sources at this stage.
     - Use bullet points where specified to ensure that information is captured in the output.
     - Ensure that content is well-written and contains a brief but sufficient summary.
     - Where subtypes exist, include nested subheadings within the content using the `###` markdown header format.
 
     - **FAQs**: The content for the FAQs section should be a JSON array of question-answer pairs. Each pair should have a "question" field and an "answer" field. Generate 3 to 5 FAQs.
+
+- **References**: This section should be empty. We will populate it in a later step.
 
 ---
 {format_instructions}
@@ -120,8 +123,6 @@ For each section, provide the following:
     )
 
     prompt_and_model = prompt_template | model
-
-    # print("prompt_and_model", type(prompt_and_model))
 
     # Define the input data
     input_data = {
@@ -137,7 +138,8 @@ For each section, provide the following:
     )
     return outline
 
-@traceable(run_type="chain")        
+
+# @traceable(run_type="chain")
 async def refine_outline_with_uptodate(
     index: int,
     condition: str,
@@ -155,7 +157,7 @@ async def refine_outline_with_uptodate(
     # Define the output parser
     parser = PydanticOutputParser(pydantic_object=Article)
 
-    # Create the prompt template with stronger emphasis on citation quality
+    # Create the prompt template with stronger emphasis on citation quality and explicit DOI instructions
     prompt_template = PromptTemplate(
         template="""You are a professional scientific writer tasked with integrating relevant information and references into an existing knowledgebase article (ARTICLE) on a given condition.
 
@@ -167,7 +169,7 @@ Goal:
 Enhance the ARTICLE by incorporating relevant information and insights from the provided UpToDate article snippets (UPTODATE).
 Your task is to refine the ARTICLE while preserving its structure and integrity.
 **Importantly, do not directly cite, refer to, or mention UpToDate articles anywhere in the output.**
-Only cite the original scientific research articles that are referenced in those UpToDate articles if you choose to incorporate information from those articles, but prefer to use other URLs than the https://doi.org links, if possible.
+Only cite the original scientific research articles that are referenced in those UpToDate articles if you choose to incorporate information from those articles.
 
 ---
 
@@ -190,9 +192,8 @@ Detailed Instructions:
    - **Do not include multiple citations for a single, general statement unless each citation offers unique and valuable information.**
    - **Aim for 1-3 citations at the end of a sentence or paragraph, only if necessary.**
    - **Strongly prefer a single, high-quality citation over multiple citations for the same point.**
-   - **Prioritize review articles or meta-analyses when available.**
-   - Do not add any empty references
-   - Prioritize non-DOI URLs when available.
+   - Do not add any empty references.
+   - **Prioritize non-DOI URLs when available. If a non-DOI URL is not available, and a DOI is provided, you may use it. However, do not hallucinate or fabricate DOIs or URLs that are not provided in the UPTODATE references.**
    - Do not cite directly from or mention UpToDate.
 
 4. Preservation and Adaptation:
@@ -242,7 +243,7 @@ UPTODATE:
     return outline
 
 
-@traceable(run_type="chain")
+# @traceable(run_type="chain")
 async def integrate_papers(
     index: int,
     condition_name: str,
@@ -292,6 +293,10 @@ Input:
    - `query`: A query or topic associated with how the paper was found.
    - `title`: Title of the paper.
    - `abstract`: Abstract or summary of the paper, containing key findings and conclusions.
+   - `authors`: "url": "https://www.semanticscholar.org/paper/aebc1ad4dcc5a121f477f95bc9dd02e87e804020",
+   - `url`: The preferred Semantic Scholar URL for the paper. Use this if it exists.
+   - `publicationVenue`: A dictionary which contains the Journal `name`.
+   - `openAccessPdf`: A dictionary which contains the `url` for the open access PDF. Only use this if the preceding Semantic Scholar and Journal URLs are missing.
    - `citation`: A suggested citation, including author(s), title, year, source, DOI and/or URL.
 
 Tasks & Guidelines:
@@ -321,6 +326,7 @@ Tasks & Guidelines:
    - Use a consistent, numbered inline citation style (e.g., [1], [2], [3]) within the ARTICLE text.
    - **Aim for 1-2 citations at the end of a sentence or paragraph, and only if necessary to support a specific claim.**
    - Add a References section at the end of the ARTICLE, listing all cited works in APA-like formatting, including authors, publication year, title, source/journal, URL or DOI.
+   - **Pay very close attention to the reference numbers. Do not use duplicate reference numbers. Each new citation must be assigned a unique, sequential number, continuing from the highest existing number in the ARTICLE.**
    - Hyperlink the URL or DOI where possible.
    - Prefer non-DOI URLs when available
    - Reformat provided citations if needed to ensure professional consistency.
@@ -374,8 +380,7 @@ PAPERS:
     return article
 
 
-
-@traceable(run_type="chain")
+# @traceable(run_type="chain")
 async def generate_search_queries_with_retries(
     index: int,
     prompt_and_model: RunnableSequence,
@@ -416,7 +421,7 @@ async def generate_search_queries_with_retries(
 
         # Wait before retrying
         if attempt < MAX_RETRIES:
-            logger.info(f"[{index+1}] Retrying search query generation in {RETRY_DELAY} seconds...")
+            logger.info(f"[{index+1}] Retrying search query generation in {RETRY_DELAY  ** attempt} seconds...")
             await asyncio.sleep(RETRY_DELAY ** attempt)
         else:
             logger.error(f"[{index+1}] Max retries reached for search query generation. Aborting.")
@@ -424,7 +429,7 @@ async def generate_search_queries_with_retries(
     raise Exception(f"Failed to generate search queries after {MAX_RETRIES} retries.")
 
 
-@traceable(run_type="chain")
+# @traceable(run_type="chain")
 async def generate_search_query_response(
     index: int,
     condition_name: str,
@@ -497,3 +502,105 @@ ARTICLE:
     )
     return search_queries
 
+
+# @traceable(run_type="chain")
+async def comprehensive_edit(
+    index: int,
+    condition_name: str,
+    alternative_name: str,
+    category: str,
+    article: Article,
+    model: ChatGoogleGenerativeAI,
+    logger: logging.Logger
+) -> Article:
+    """
+    Performs a comprehensive edit of the article, combining readability improvements,
+    tone and style consistency checks, fact-checking, and reference consolidation.
+
+    Args:
+        index: Index of the article in the processing pipeline.
+        condition_name: Name of the condition.
+        alternative_name: Alternative name of the condition.
+        category: Category of the condition.
+        article: The article to be edited.
+        model: The LLM for processing.
+        logger: Logger instance.
+
+    Returns:
+        The comprehensively edited article.
+    """
+    parser = PydanticOutputParser(pydantic_object=Article)
+
+    prompt_template = PromptTemplate(
+        template="""You are a highly skilled and detail-oriented scientific editor tasked with performing a comprehensive edit of a knowledgebase article.
+
+Condition: '{condition_name}'
+Alternate Name: '{alternative_name}'
+Category: '{category}'
+
+YOUR TASK:
+Perform the following edits on the provided ARTICLE, ensuring the highest standards of quality, accuracy, and consistency.
+
+1. **Readability and Clarity**:
+   - Rephrase sentences or paragraphs that are complex, ambiguous, or unclear to improve overall readability.
+   - Enhance conciseness by eliminating redundancy, wordiness, and unnecessary jargon.
+   - Ensure smooth transitions between sentences and paragraphs for a coherent flow.
+
+2. **Tone, Style, and Formatting Consistency**:
+   - Maintain a formal, objective, and scientific tone throughout the article. Adjust any sections that deviate from this tone.
+   - Ensure uniformity in writing style, including the use of terminology, abbreviations, and acronyms. Standardize variations where necessary.
+   - Check for consistency in formatting elements such as headings, subheadings, bullet points, and inline citations. Make adjustments to maintain a uniform format.
+
+3. **Fact-Checking and Corrections**:
+   - Identify statements, data, statistics, and assertions that can be fact-checked.
+   - Verify the accuracy of each identified claim using your extensive knowledge base.
+   - Correct any inaccuracies or outdated information, preserving the original meaning and intent as much as possible.
+   - If a correction significantly alters the original information, and you have access to a reliable source to support the correction, briefly note the source within the text (e.g., "[Source: Author, Year]") without adding it to the existing references.
+   - Briefly note any significant changes or corrections made within the text itself (e.g., "[Corrected: Previous statement was updated based on recent research.]"). This should be done sparingly and only when necessary for transparency.
+
+4. **Reference Consolidation**:
+    - Identify any references in the "References" section that have the same reference number but different citation details. These are considered duplicates.
+    - Merge: For each set of duplicate references, choose the most comprehensive and accurate citation as the primary reference.
+    - Remap: Assign a new, unique reference number to the primary reference. Remove the other duplicate entries.
+    - Update Inline Citations: Throughout the article's content, replace all instances of the old duplicate reference numbers with the new, unique reference number assigned to the primary reference.
+    - Preserve Order: Maintain the relative order of references based on their first appearance in the text. Renumber the references sequentially after merging.
+
+5. **Citation Style**:
+    - Ensure that inline citations and the "References" section follow a consistent style.
+    - Correct any inconsistencies in the formatting of existing references.
+
+6. **Preservation**:
+   - Maintain the original structure of the article, including the order of sections, headings, and subheadings.
+   - Do not alter the factual content or meaning of the information presented, except when correcting inaccuracies.
+   - Keep the existing references intact unless consolidating duplicates.
+
+7. **Output**:
+   - Ensure that the output is the corrected article in the original JSON format.
+   - Do not include any extraneous commentary, reasoning steps, or notes outside the refined ARTICLE.
+   - Output the response as strict JSON without any additional commentary or formatting. Do not include code block markers like triple backticks (`).
+
+ARTICLE:
+{article}
+
+---
+{format_instructions}
+""",
+        input_variables=["condition_name", "alternative_name", "category", "article"],
+        partial_variables={"format_instructions": parser.get_format_instructions()},
+    )
+
+    input_data = {
+        "condition_name": condition_name,
+        "alternative_name": alternative_name,
+        "category": category,
+        "article": article.model_dump_json(indent=2),
+    }
+
+    prompt_and_model = prompt_template | model
+
+    logger.info(f"[{index+1}] Performing comprehensive edit of the article...")
+    edited_article = await generate_outline_with_retries(
+        index, prompt_and_model, parser, input_data, logger
+    )
+
+    return edited_article

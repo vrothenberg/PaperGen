@@ -138,15 +138,10 @@ class Author(BaseModel):
 
 class PublicationVenue(BaseModel):
     name: Optional[str] = None
-    url: Optional[HttpUrl] = None
     SJR: Optional[float] = None
-    H_Index: Optional[float] = None
 
 class ExternalIds(BaseModel):
     DOI: Optional[str] = None
-
-class OpenAccessPdf(BaseModel):
-    url: Optional[HttpUrl] = None
 
 class Paper(BaseModel):
     section: str
@@ -158,8 +153,8 @@ class Paper(BaseModel):
     referenceCount: Optional[int] = None
     url: Optional[HttpUrl] = None
     venue: Optional[str] = None
-    publicationVenue: Optional[PublicationVenue] = None
+    # publicationVenue: Optional[PublicationVenue] = None
     year: Optional[Union[int, str]] = None 
-    openAccessPdf: Optional[OpenAccessPdf] = None
+    openAccessPdf: Optional[HttpUrl] = None
     externalIds: Optional[ExternalIds] = None
     citation: str = Field(..., description="APA-like citation with author(s), title, year, source, DOI/URL")

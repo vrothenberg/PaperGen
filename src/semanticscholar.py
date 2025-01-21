@@ -205,7 +205,11 @@ class SemanticScholarAPI:
                 if sjr is not None and sjr > self.sjr_threshold:
                     # Inject SJR and H-index into the paper metadata
                     paper_data["publicationVenue"]["SJR"] = sjr
-                    paper_data["publicationVenue"]["H_Index"] = h_index
+
+                    if isinstance(paper_data["openAccessPdf"], dict):
+                        paper_data["openAccessPdf"] = paper_data["openAccessPdf"].get("url")
+                    else:
+                        paper_data["openAccessPdf"] = None
 
                     try:
                         # Validate against the Paper model
@@ -293,19 +297,17 @@ class SemanticScholarAPI:
         publication_url = publication_venue.get("url", "")
 
         doi = paper.get("externalIds", {}).get("DOI", None)
-        open_access_pdf = paper.get("openAccessPdf") or {}
-        pdf_url = open_access_pdf.get("url", None)
+        open_access_pdf = paper.get("openAccessPdf", None)
         general_url = paper.get("url", None)
 
         citation = f"{authors}. \"{title}\" ({year}). Published in {publication_name}."
 
         if doi:
-            citation += f" DOI: {doi}."
-        elif pdf_url:
-            citation += f" Open Access PDF: {pdf_url}."
-        elif general_url:
+            citation += f" DOI: {doi}"
+        if general_url:
             citation += f" Available at: {general_url}."
-
+        if open_access_pdf:
+            citation += f" Open Access PDF: {open_access_pdf}."
         if publication_url:
             citation += f" Publication Info: {publication_url}."
 

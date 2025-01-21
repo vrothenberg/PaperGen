@@ -7,7 +7,7 @@ import hashlib
 import asyncio
 import logging
 from datetime import datetime
-from typing import Any, List, Dict, Callable, Coroutine, TypeVar, ParamSpec
+from typing import Any, List, Dict, Callable, Coroutine, TypeVar, ParamSpec, Union, Set
 from src.models import SearchQuery, Article, Paper
 from pydantic import ValidationError
 
@@ -122,7 +122,7 @@ def clean_json(text: str) -> str:
     # Ensure that all opening brackets have corresponding closing brackets
     open_brackets = cleaned_text.count('[') - cleaned_text.count(']')
     open_braces = cleaned_text.count('{') - cleaned_text.count('}')
-    
+
     if open_brackets > 0:
         cleaned_text += ']' * open_brackets
     if open_braces > 0:
@@ -197,6 +197,7 @@ def validate_article_json(article_json: str, logger: logging.Logger) -> bool:
         logger.error(f"Pydantic validation error: {e}")
         return False
 
+
 def expand_citation_ranges(citation: str) -> List[str]:
     """
     Expand a citation range like [2,23-25] into a list of individual numbers: ['2', '23', '24', '25'].
@@ -220,6 +221,7 @@ def expand_citation_ranges(citation: str) -> List[str]:
             except ValueError:
                 print(f"Invalid reference: {part}. Skipping.")
     return expanded
+
 
 def extract_citations(line: str) -> List[str]:
     """
@@ -270,3 +272,274 @@ def parse_reference(ref_str: str, chunk_title: str, logger: logging.Logger):
         'citation': citation
     }
 
+
+
+
+
+
+
+def get_bad_references(data: Dict) -> Set[int]:
+    """Identifies references that are missing required fields."""
+    bad_references = set()
+    if "references" in data and "content" in data["references"]:
+        for ref in data["references"]["content"]:
+            if (
+                not ref.get("journal_source")
+                or not ref.get("authors")
+                or not ref.get("year")
+            ):
+                bad_references.add(ref["reference_number"])
+    return bad_references
+
+
+
+def identify_all_inline_citations(data: Dict) -> Set[int]:
+    """
+    Identifies all unique inline citations (e.g., [1], [2, 3]) in the document.
+
+    Recursively processes nested dictionaries and lists within all sections,
+    except for the "references" section.
+    """
+
+    def _extract_citations_from_text(text: str) -> Set[int]:
+        """Helper function to extract citations from a text string."""
+        citations = set()
+        matches = re.findall(r"\[([^\]]+)\]", text)
+        for match in matches:
+            for ref in match.split(","):
+                ref = ref.strip()
+                if ref.isdigit():
+                    citations.add(int(ref))
+        return citations
+
+    def _recursive_process(item: Any, in_references_section: bool = False) -> Set[int]:
+        """Recursively processes dictionaries, lists, and strings."""
+        citations = set()
+        if isinstance(item, str):
+            if not in_references_section:
+                citations.update(_extract_citations_from_text(item))
+        elif isinstance(item, dict):
+            # Correctly set in_references_section for child elements
+            is_current_references = "references" in item
+            for value in item.values():
+                citations.update(
+                    _recursive_process(value, is_current_references)
+                )  # Pass the flag based on the current item
+
+        elif isinstance(item, list):
+            for list_item in item:
+                citations.update(_recursive_process(list_item, in_references_section))
+        return citations
+
+    return _recursive_process(data)
+
+
+def get_all_reference_numbers(references_section: Dict) -> Set[int]:
+    """
+    Extracts all reference numbers from the 'references' section,
+    even if they are not integers (for finding unused references).
+    """
+    reference_numbers = set()
+    if isinstance(references_section, dict):
+        for item in references_section.get("content", []):
+            ref_num = item.get("reference_number")
+            if ref_num is not None:
+                reference_numbers.add(ref_num)
+    return reference_numbers
+
+
+
+
+def remove_references(data: Dict, references_to_remove: set) -> Dict:
+    """Removes specified references from the 'references' section."""
+    if "references" in data and "content" in data["references"]:
+        data["references"]["content"] = [
+            ref
+            for ref in data["references"]["content"]
+            if ref["reference_number"] not in references_to_remove
+        ]
+    return data
+
+
+def remove_inline_citations(data: Dict, references_to_remove: set) -> Dict:
+    """Removes inline citations corresponding to the specified reference numbers.
+
+    Recursively processes nested dictionaries and lists within all sections,
+    except for the "references" section.
+    """
+
+    def _process_text(text: str) -> str:
+        """Helper function to process individual text strings."""
+        return re.sub(
+            r"\[([^\]]+)\]",
+            lambda match: "["
+            + ",".join(
+                ref.strip()
+                for ref in match.group(1).split(",")
+                if not (ref.strip().isdigit() and int(ref.strip()) in references_to_remove)
+            )
+            + "]"
+            if any(
+                ref.strip().isdigit() and int(ref.strip()) not in references_to_remove
+                for ref in match.group(1).split(",")
+            )
+            else "",
+            text,
+        )
+
+    def _recursive_process(item: Any, in_references_section: bool = False) -> Any:
+        """Recursively processes dictionaries, lists, and strings.
+        Skips processing if inside the 'references' section.
+        """
+        if isinstance(item, str):
+            return item if in_references_section else _process_text(item)
+        elif isinstance(item, dict):
+            if "references" in item:
+                return {
+                    key: _recursive_process(value, key == "references")
+                    for key, value in item.items()
+                }
+            else:
+                return {
+                    key: _recursive_process(value, in_references_section)
+                    for key, value in item.items()
+                }
+
+        elif isinstance(item, list):
+            return [_recursive_process(list_item, in_references_section) for list_item in item]
+        else:
+            return item
+
+    return _recursive_process(data)
+
+
+def create_remap_dictionary(data: Dict) -> Dict:
+    """Creates a dictionary to map old reference numbers to new sequential ones."""
+    reference_numbers = []
+    if "references" in data and "content" in data["references"]:
+        for ref in data["references"]["content"]:
+            if "reference_number" in ref:
+                reference_numbers.append(ref["reference_number"])
+
+    reference_numbers.sort()
+    return {
+        old_num: new_num
+        for new_num, old_num in enumerate(reference_numbers, start=1)
+    }
+
+
+def update_reference_numbers(data: Dict, remap: Dict) -> Dict:
+    """Updates reference numbers in the 'references' section based on the remap dictionary."""
+    if "references" in data and "content" in data["references"]:
+        for ref in data["references"]["content"]:
+            if "reference_number" in ref:
+                ref["reference_number"] = remap[ref["reference_number"]]
+    return data
+
+
+def update_inline_citations(data: Dict, remap: Dict) -> Dict:
+    """Updates inline citations to reflect new reference numbers based on the remap dictionary.
+
+    Recursively processes nested dictionaries and lists within all sections,
+    except for the "references" section.
+    """
+
+    def _process_text(text: str, remap: Dict) -> str:
+        """Helper function to process individual text strings."""
+
+        def _replace_citation(match):
+            updated_refs = []
+            for ref in match.group(1).split(","):
+                ref_str = ref.strip()
+                if ref_str.isdigit():
+                    ref_int = int(ref_str)
+                    updated_ref = remap.get(ref_int, ref_str)  # Use int key, fallback to original if not found
+                else:
+                    updated_ref = ref_str
+                updated_refs.append(str(updated_ref))
+            return "[" + ",".join(updated_refs) + "]"
+
+        return re.sub(r"\[([^\]]+)\]", _replace_citation, text)
+
+    def _recursive_process(item: Any, remap:Dict, in_references_section: bool = False) -> Any:
+        """Recursively processes dictionaries, lists, and strings.
+        Skips processing if inside the 'references' section.
+        """
+        if isinstance(item, str):
+            return item if in_references_section else _process_text(item, remap)
+        elif isinstance(item, dict):
+            if "references" in item:
+                return {
+                    key: _recursive_process(value, remap, key == "references")
+                    for key, value in item.items()
+                }
+            else:
+                return {
+                    key: _recursive_process(value, remap, in_references_section)
+                    for key, value in item.items()
+                }
+        elif isinstance(item, list):
+            return [
+                _recursive_process(list_item, remap, in_references_section)
+                for list_item in item
+            ]
+        else:
+            return item
+
+    return _recursive_process(data, remap)
+
+
+def check_for_duplicate_references(data: Dict) -> bool:
+    """Checks if the references section contains duplicate reference numbers"""
+    reference_numbers = []
+    if "references" in data and "content" in data["references"]:
+        for ref in data["references"]["content"]:
+            if "reference_number" in ref:
+                reference_numbers.append(ref["reference_number"])
+
+    # Check for uniqueness
+    return len(reference_numbers) != len(set(reference_numbers))
+
+
+def sort_references_ascending(data: Dict) -> Dict:
+    """Sorts the references in the 'references' section by 'reference_number' in ascending order."""
+    if "references" in data and "content" in data["references"]:
+        data["references"]["content"].sort(key=lambda x: x.get("reference_number", float('inf')))
+    return data
+
+def clean_references(data: Dict) -> Dict:
+    """
+    Cleans up references in the document:
+
+    1. Identifies and removes orphaned inline citations.
+    2. Identifies and removes unused references.
+    3. Renumbers references and updates inline citations.
+    """
+
+    # 1. Identify Inline Citations and Reference Numbers
+    inline_citations = identify_all_inline_citations(data)
+    all_reference_numbers = get_all_reference_numbers(data.get("references", {}))
+
+    # 2. Find Orphaned and Unused
+    orphaned_citations = inline_citations - all_reference_numbers
+    unused_references = all_reference_numbers - inline_citations
+
+    # 3. Identify bad references
+    bad_references = get_bad_references(data)
+
+    # 4. Remove Orphaned Citations and Unused References
+    data = remove_inline_citations(data, orphaned_citations)
+    data = remove_references(data, unused_references)
+    data = remove_references(data, bad_references)
+    data = remove_inline_citations(data, bad_references)
+
+    # 5. Renumber and Update
+    remap_dict = create_remap_dictionary(data)
+    data = update_reference_numbers(data, remap_dict)
+    data = update_inline_citations(data, remap_dict)
+
+    # 6. Check for Duplicates
+    if check_for_duplicate_references(data):
+        print("Warning: Duplicate reference numbers found after cleaning.")
+
+    return data
