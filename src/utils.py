@@ -273,11 +273,6 @@ def parse_reference(ref_str: str, chunk_title: str, logger: logging.Logger):
     }
 
 
-
-
-
-
-
 def get_bad_references(data: Dict) -> Set[int]:
     """Identifies references that are missing required fields."""
     bad_references = set()
@@ -290,7 +285,6 @@ def get_bad_references(data: Dict) -> Set[int]:
             ):
                 bad_references.add(ref["reference_number"])
     return bad_references
-
 
 
 def identify_all_inline_citations(data: Dict) -> Set[int]:
@@ -346,8 +340,6 @@ def get_all_reference_numbers(references_section: Dict) -> Set[int]:
             if ref_num is not None:
                 reference_numbers.add(ref_num)
     return reference_numbers
-
-
 
 
 def remove_references(data: Dict, references_to_remove: set) -> Dict:
@@ -426,6 +418,51 @@ def create_remap_dictionary(data: Dict) -> Dict:
         old_num: new_num
         for new_num, old_num in enumerate(reference_numbers, start=1)
     }
+
+def create_citation_remap(data: Dict) -> Dict:
+    """
+    Creates a dictionary to map old reference numbers to new sequential ones based on the order they appear as inline citations in the text.
+
+    Args:
+        data (Dict): The article data as a dictionary.
+
+    Returns:
+        Dict: A dictionary mapping old reference numbers to new ones.
+    """
+
+    def _extract_citations_from_text(text: str) -> List[int]:
+        """Helper function to extract and validate citation numbers from text."""
+        citations = []
+        matches = re.findall(r"\[([^\]]+)\]", text)
+        for match in matches:
+            for ref_str in match.split(","):
+                ref_str = ref_str.strip()
+                if ref_str.isdigit():
+                    citations.append(int(ref_str))
+        return citations
+
+    def _recursive_process(item: Any, seen_citations: List[int], remap: Dict) -> None:
+        """Recursively processes dictionaries, lists, and strings to find citations in order."""
+        if isinstance(item, str):
+            for citation in _extract_citations_from_text(item):
+                if citation not in seen_citations:
+                    seen_citations.append(citation)
+                    remap[citation] = len(seen_citations)  # Assign new reference number
+        elif isinstance(item, dict):
+            for value in item.values():
+                _recursive_process(value, seen_citations, remap)
+        elif isinstance(item, list):
+            for list_item in item:
+                _recursive_process(list_item, seen_citations, remap)
+
+    seen_citations = []
+    remap_dict = {}
+    # Process all sections except the "references" section
+    for section_name, section_content in data.items():
+        if section_name != "references":
+            _recursive_process(section_content, seen_citations, remap_dict)
+
+    return remap_dict
 
 
 def update_reference_numbers(data: Dict, remap: Dict) -> Dict:
@@ -524,7 +561,7 @@ def clean_references(data: Dict) -> Dict:
     orphaned_citations = inline_citations - all_reference_numbers
     unused_references = all_reference_numbers - inline_citations
 
-    # 3. Identify bad references
+    # 3. Identify bad references (missing fields)
     bad_references = get_bad_references(data)
 
     # 4. Remove Orphaned Citations and Unused References
@@ -538,7 +575,15 @@ def clean_references(data: Dict) -> Dict:
     data = update_reference_numbers(data, remap_dict)
     data = update_inline_citations(data, remap_dict)
 
-    # 6. Check for Duplicates
+    # 6. Renumber according to in-line citations
+    remap_dict = create_citation_remap(data)
+    data = update_reference_numbers(data, remap_dict)
+    data = update_inline_citations(data, remap_dict)
+
+    # 7. Sort
+    data = sort_references_ascending(data)
+
+    # 8. Check for Duplicates
     if check_for_duplicate_references(data):
         print("Warning: Duplicate reference numbers found after cleaning.")
 
