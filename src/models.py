@@ -1,13 +1,12 @@
-# src/models.py
-
-from pydantic import BaseModel, Field, HttpUrl, RootModel
+from pydantic import BaseModel, Field, HttpUrl
 from typing import List, Optional, Union
 
 
-# Search queries response format
 class SearchQuery(BaseModel):
     section: str = Field(..., description="The section of the outline the query corresponds to.")
     query: str = Field(..., description="The search query for this section.")
+    rationale: str = Field(..., description="Rationale for choosing this query.")
+    excerpt: Optional[str] = Field(None, description="Optional excerpt from the article to improve search query.")
 
 
 class SearchQueryList(BaseModel):
@@ -15,6 +14,7 @@ class SearchQueryList(BaseModel):
     Wrapper class for a list of SearchQuery objects.
     """
     root: List[SearchQuery] = Field(..., description="List of search queries.")
+
 
 class ReferenceItem(BaseModel):
     reference_number: int = Field(..., description="Sequential reference number.")
@@ -111,16 +111,25 @@ class ReferencesSection(BaseModel):
     content: List[ReferenceItem] = Field(..., description="A list of references.")
 
 
+class LifestyleSection(BaseModel):
+    heading: str = Field(default="Lifestyle", description="Heading of the section.")
+    content: str = Field(
+        default="",
+        description="Relationship of the condition with factors like Sleep, Nutrition, and Circadian Rhythms, etc."
+    )
+
+
 class Article(BaseModel):
     title: str = Field(..., description="The main heading of the article.")
     subtitle: str = Field(..., description="A concise introductory phrase summarizing the condition.")
-    
+    keywords: List[str] = Field(..., description="Keywords associated with the article to improve searchability.")
     overview: OverviewSection = Field(..., description="Overview section of the article.")
     key_facts: KeyFactsSection = Field(..., description="Key Facts section of the article.")
     symptoms: SymptomsSection = Field(..., description="Symptoms section of the article.")
     types: TypesSection = Field(..., description="Types section of the article.")
     causes: CausesSection = Field(..., description="Causes section of the article.")
     risk_factors: RiskFactorsSection = Field(..., description="Risk Factors section of the article.")
+    lifestyle: LifestyleSection = Field(..., description="Lifestyle section of the article.")
     diagnosis: DiagnosisSection = Field(..., description="Diagnosis section of the article.")
     prevention: PreventionSection = Field(..., description="Prevention section of the article.")
     specialist_to_visit: SpecialistToVisitSection = Field(..., description="Specialist to Visit section of the article.")
@@ -131,17 +140,16 @@ class Article(BaseModel):
     alternative_therapies: AlternativeTherapiesSection = Field(..., description="Alternative Therapies section of the article.")
     faqs: FAQsSection = Field(..., description="FAQs section of the article.")
     references: ReferencesSection = Field(..., description="References section of the article.")
+    
 
 
 class Author(BaseModel):
     name: str
 
-class PublicationVenue(BaseModel):
-    name: Optional[str] = None
-    SJR: Optional[float] = None
 
 class ExternalIds(BaseModel):
     DOI: Optional[str] = None
+
 
 class Paper(BaseModel):
     section: str
@@ -153,8 +161,7 @@ class Paper(BaseModel):
     referenceCount: Optional[int] = None
     url: Optional[HttpUrl] = None
     venue: Optional[str] = None
-    # publicationVenue: Optional[PublicationVenue] = None
-    year: Optional[Union[int, str]] = None 
+    year: Optional[Union[int, str]] = None
     openAccessPdf: Optional[HttpUrl] = None
     externalIds: Optional[ExternalIds] = None
     citation: str = Field(..., description="APA-like citation with author(s), title, year, source, DOI/URL")

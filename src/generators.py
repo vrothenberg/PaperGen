@@ -473,8 +473,9 @@ REQUIREMENTS:
 2. Each query must include:
     - 'section': The section of the outline the query corresponds to.
     - 'query': A specific search term designed to find relevant papers or abstracts.
+    - 'rationale': A short sentence explaining why the search query is relevant to that section.
+    - 'excerpt': If a specific area of the article is lacking details or is a claim that needs to be corroborated, include the original sentence in the excerpt. Otherwise leave blank.
 3. Use simple, standalone search terms or phrases. Avoid logical operators like `AND`, `OR`, or quotation marks.
-
 
 ARTICLE:
 {article}
