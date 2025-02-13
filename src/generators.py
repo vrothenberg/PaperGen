@@ -9,15 +9,15 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import PromptTemplate
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_core.runnables import RunnableSequence
-# from langsmith import wrappers, traceable
 
-from src.models import Article, SearchQuery, SearchQueryList, Paper
+from src.models import Article, SearchQuery, SearchQueryList, Paper, PaperList, TitleList
+from src.utils import generate_with_retries
 
 MAX_RETRIES = 10
 RETRY_DELAY = 2.0
 
 
-async def generate_outline_with_retries(
+async def generate_article_with_retries(
     index: int,
     prompt_and_model: RunnableSequence,
     parser: PydanticOutputParser,
@@ -133,7 +133,7 @@ For each section, provide the following:
 
     logger.info(f"[{index+1}] Generating outline...")
     # Generate the outline with retries
-    outline = await generate_outline_with_retries(
+    outline = await generate_with_retries(
         index, prompt_and_model, parser, input_data, logger
     )
     return outline
@@ -237,10 +237,212 @@ UPTODATE:
 
     logger.info(f"[{index+1}] Generating article with UpToDate chunks...")
     # Generate the outline with retries
-    outline = await generate_outline_with_retries(
+    outline = await generate_with_retries(
         index, prompt_and_model, parser, input_data, logger
     )
     return outline
+
+
+# # @traceable(run_type="chain")
+# async def generate_search_queries_with_retries(
+#     index: int,
+#     prompt_and_model: RunnableSequence,
+#     parser: PydanticOutputParser,
+#     input_data: dict,
+#     logger: logging.Logger = None
+# ) -> SearchQueryList:
+#     """
+#     Generates search queries with retries using a given prompt and model.
+
+#     Args:
+#         prompt_and_model: A LangChain Runnable representing the prompt and model.
+#         parser: A PydanticOutputParser for parsing the output into SearchQuery objects.
+#         input_data: The input data for the prompt, including the outline.
+#         logger: Logger instance.
+
+#     Returns:
+#         A list of SearchQuery objects.
+
+#     Raises:
+#         Exception: If the maximum number of retries is reached without success.
+#     """
+#     for attempt in range(1, MAX_RETRIES + 1):
+#         try:
+#             # Invoke the model with the input data
+#             logger.info(f"[{index+1}] Search query generation attempt {attempt} of {MAX_RETRIES}...")
+#             output = await prompt_and_model.ainvoke(input_data)
+
+#             # Parse and validate the generated content
+#             search_queries = await parser.ainvoke(output)
+#             logger.info(f"[{index+1}] Search query generation success on attempt {attempt}.")
+#             return search_queries
+
+#         except ValidationError as e:
+#             logger.error(f"[{index+1}] Search query validation error on attempt {attempt}: {e}")
+#         except Exception as ex:
+#             logger.error(f"[{index+1}] Search query generation error on attempt {attempt}: {ex}")
+
+#         # Wait before retrying
+#         if attempt < MAX_RETRIES:
+#             logger.info(f"[{index+1}] Retrying search query generation in {RETRY_DELAY  ** attempt} seconds...")
+#             await asyncio.sleep(RETRY_DELAY ** attempt)
+#         else:
+#             logger.error(f"[{index+1}] Max retries reached for search query generation. Aborting.")
+
+#     raise Exception(f"Failed to generate search queries after {MAX_RETRIES} retries.")
+
+
+async def generate_search_query_response(
+    index: int,
+    condition_name: str,
+    alternative_name: str, 
+    category: str, 
+    article: Article,
+    model: ChatGoogleGenerativeAI,
+    logger: logging.Logger = None
+) -> SearchQueryList:
+    """
+    Generates search queries for each section of a given outline using a language model.
+
+    Args:
+        index (int)
+        article (Outline): The article outline.
+        model (ChatGoogleGenerativeAI): The language model.
+        logger (logging.Logger, optional): Logger instance. Defaults to None.
+
+    Returns:
+        SearchQueryList: A list of search queries, each corresponding to a section of the outline.
+    """
+    # Define the output parser
+    parser = PydanticOutputParser(pydantic_object=SearchQueryList)
+
+    # Create the prompt template
+    prompt_template = PromptTemplate(
+        template="""You are tasked with generating search queries to find corroborating evidence for key claims in a knowledgebase article.
+The goal is to identify relevant scientific papers to support and enhance the ARTICLE, ensuring credibility and depth.
+
+Condition: '{condition}'
+Alternate Name: '{alternative_name}'
+Category: '{category}'
+
+TASK:
+- Review the provided outline of the knowledgebase article.
+- Identify areas or claims that would benefit from further evidence or scientific backing.
+- For each identified section, create a search query targeting relevant scientific papers or data.
+
+REQUIREMENTS:
+1. Return the search queries in strict JSON format.
+2. Each query must include:
+    - 'section': The section of the outline the query corresponds to.
+    - 'query': A specific search term designed to find relevant papers or abstracts.
+    - 'rationale': A short sentence explaining why the search query is relevant to that section.
+    - 'excerpt': If a specific area of the article is lacking details or is a claim that needs to be corroborated, include the original sentence in the excerpt. Otherwise leave blank.
+3. Use simple, standalone search terms or phrases. Avoid logical operators like `AND`, `OR`, or quotation marks.
+
+ARTICLE:
+{article}
+
+---
+{format_instructions}
+        """,
+        input_variables=["condition", "alternative_name", "category", "article"],
+        partial_variables={"format_instructions": parser.get_format_instructions()},
+    )
+
+    # Define input data
+    input_data = {
+        "condition": condition_name,
+        "alternative_name": alternative_name,
+        "category": category,
+        "article": article.model_dump_json(indent=2),
+    }
+
+    prompt_and_model = prompt_template | model
+
+    # Generate the search queries with retries
+    search_queries = await generate_with_retries(
+        index, prompt_and_model, parser, input_data, logger
+    )
+    return search_queries
+
+
+async def filter_papers_by_relevancy(
+    index: int,
+    condition_name: str,
+    alternative_name: str,
+    category: str,
+    papers: List[Paper],
+    model: ChatGoogleGenerativeAI,
+    logger: logging.Logger
+) -> List[Paper]:
+    """
+    Filters a list of papers based on their relevance to the article using an LLM.
+
+    Args:
+        index (int): Index of the current operation, used for logging.
+        condition_name (str): The name of the condition being discussed.
+        alternative_name (str): An alternate name for the condition.
+        category (str): The category the condition falls under.
+        papers (List[Paper]): A list of Paper objects.
+        model (ChatGoogleGenerativeAI): The Langchain model instance for generation.
+        logger (logging.Logger): The logger to use for error messages.
+
+    Returns:
+        List[Paper]: A list of Paper objects that are deemed relevant.
+
+    Raises:
+       PaperFilteringError: If paper filtering fails
+    """
+    parser = PydanticOutputParser(pydantic_object=TitleList)
+
+    prompt_template = PromptTemplate(
+        template="""You are a scientific literature expert tasked with determining the relevance of a list of scientific papers to specific sections of a knowledgebase article. Your goal is to filter out any papers that are not directly relevant, ensuring that only the most pertinent information is used to enhance the article.
+
+Condition: '{condition_name}'
+Alternate Name: '{alternative_name}'
+Category: '{category}'
+
+Task:
+For each paper in the provided LIST OF PAPERS, determine if the paper is relevant to the ARTICLE section based on the given condition. Use the paper's originating SEARCH QUERY, its RATIONALE, and optional ARTICLE EXCERPT to evaluate the relevance of each paper.
+
+Guidelines:
+1.  **Direct Relevance:** The paper's abstract must directly address the ARTICLE section's topic, the paper's SEARCH QUERY, and its RATIONALE. The selected papers should enhance the knowledgebase article and provide further information.
+2.  **Contextual Fit:** Ensure the paper's focus aligns precisely with the RATIONALE and SEARCH QUERY. Exclude papers that discuss similar but distinct topics.
+3.  **Beyond Keywords**: Do not select a paper based solely on matching keywords. Evaluate if the paper provides additional insight and context to the RATIONALE.
+4.  **Focus on Results:** Prioritize papers presenting study results, rather than methods or techniques alone.
+5.  **Specific Overviews**: Favor more specific studies over overly broad review articles when possible.
+6.  **Use Article Excerpt if Available**: If the paper includes an ARTICLE EXCERPT, ensure the paper adds specific context and insight to the statement.
+
+7.  **Output Format**: Return a JSON list of paper titles that are deemed relevant. Each title must be a string. Do not include any metadata about the papers other than the titles.
+
+LIST OF PAPERS:
+{papers}
+
+---
+{format_instructions}
+""",
+        input_variables=["condition_name", "alternative_name", "category"],
+        partial_variables={"format_instructions": parser.get_format_instructions()},
+    )
+
+    input_data = {
+            "condition_name": condition_name,
+            "alternative_name": alternative_name,
+            "category": category,
+            "papers": json.dumps([paper.model_dump(mode='json') for paper in papers], indent=2)
+        }
+    
+    prompt_and_model = prompt_template | model
+
+    filtered_titles = await generate_with_retries(index, prompt_and_model, parser, input_data, logger)
+    
+    # Filter the original papers based on the returned titles
+    relevant_papers = [
+        paper for paper in papers
+        if paper.title in filtered_titles.root
+    ]
+    
+    return relevant_papers
 
 
 # @traceable(run_type="chain")
@@ -374,134 +576,11 @@ PAPERS:
 
     logger.info(f"[{index+1}] Generating article with Semantic Scholar papers...")
     # Generate the outline with retries
-    article = await generate_outline_with_retries(
+    article = await generate_with_retries(
        index, prompt_and_model, parser, input_data, logger
     )
     return article
 
-
-# @traceable(run_type="chain")
-async def generate_search_queries_with_retries(
-    index: int,
-    prompt_and_model: RunnableSequence,
-    parser: PydanticOutputParser,
-    input_data: dict,
-    logger: logging.Logger = None
-) -> SearchQueryList:
-    """
-    Generates search queries with retries using a given prompt and model.
-
-    Args:
-        prompt_and_model: A LangChain Runnable representing the prompt and model.
-        parser: A PydanticOutputParser for parsing the output into SearchQuery objects.
-        input_data: The input data for the prompt, including the outline.
-        logger: Logger instance.
-
-    Returns:
-        A list of SearchQuery objects.
-
-    Raises:
-        Exception: If the maximum number of retries is reached without success.
-    """
-    for attempt in range(1, MAX_RETRIES + 1):
-        try:
-            # Invoke the model with the input data
-            logger.info(f"[{index+1}] Search query generation attempt {attempt} of {MAX_RETRIES}...")
-            output = await prompt_and_model.ainvoke(input_data)
-
-            # Parse and validate the generated content
-            search_queries = await parser.ainvoke(output)
-            logger.info(f"[{index+1}] Search query generation success on attempt {attempt}.")
-            return search_queries
-
-        except ValidationError as e:
-            logger.error(f"[{index+1}] Search query validation error on attempt {attempt}: {e}")
-        except Exception as ex:
-            logger.error(f"[{index+1}] Search query generation error on attempt {attempt}: {ex}")
-
-        # Wait before retrying
-        if attempt < MAX_RETRIES:
-            logger.info(f"[{index+1}] Retrying search query generation in {RETRY_DELAY  ** attempt} seconds...")
-            await asyncio.sleep(RETRY_DELAY ** attempt)
-        else:
-            logger.error(f"[{index+1}] Max retries reached for search query generation. Aborting.")
-
-    raise Exception(f"Failed to generate search queries after {MAX_RETRIES} retries.")
-
-
-# @traceable(run_type="chain")
-async def generate_search_query_response(
-    index: int,
-    condition_name: str,
-    alternative_name: str, 
-    category: str, 
-    article: Article,
-    model: ChatGoogleGenerativeAI,
-    logger: logging.Logger = None
-) -> SearchQueryList:
-    """
-    Generates search queries for each section of a given outline using a language model.
-
-    Args:
-        index (int)
-        article (Outline): The article outline.
-        model (ChatGoogleGenerativeAI): The language model.
-        logger (logging.Logger, optional): Logger instance. Defaults to None.
-
-    Returns:
-        SearchQueryList: A list of search queries, each corresponding to a section of the outline.
-    """
-    # Define the output parser
-    parser = PydanticOutputParser(pydantic_object=SearchQueryList)
-
-    # Create the prompt template
-    prompt_template = PromptTemplate(
-        template="""You are tasked with generating search queries to find corroborating evidence for key claims in a knowledgebase article.
-The goal is to identify relevant scientific papers to support and enhance the ARTICLE, ensuring credibility and depth.
-
-Condition: '{condition}'
-Alternate Name: '{alternative_name}'
-Category: '{category}'
-
-TASK:
-- Review the provided outline of the knowledgebase article.
-- Identify areas or claims that would benefit from further evidence or scientific backing.
-- For each identified section, create a search query targeting relevant scientific papers or data.
-
-REQUIREMENTS:
-1. Return the search queries in strict JSON format.
-2. Each query must include:
-    - 'section': The section of the outline the query corresponds to.
-    - 'query': A specific search term designed to find relevant papers or abstracts.
-    - 'rationale': A short sentence explaining why the search query is relevant to that section.
-    - 'excerpt': If a specific area of the article is lacking details or is a claim that needs to be corroborated, include the original sentence in the excerpt. Otherwise leave blank.
-3. Use simple, standalone search terms or phrases. Avoid logical operators like `AND`, `OR`, or quotation marks.
-
-ARTICLE:
-{article}
-
----
-{format_instructions}
-        """,
-        input_variables=["condition", "alternative_name", "category", "article"],
-        partial_variables={"format_instructions": parser.get_format_instructions()},
-    )
-
-    # Define input data
-    input_data = {
-        "condition": condition_name,
-        "alternative_name": alternative_name,
-        "category": category,
-        "article": article.model_dump_json(indent=2),
-    }
-
-    prompt_and_model = prompt_template | model
-
-    # Generate the search queries with retries
-    search_queries = await generate_search_queries_with_retries(
-        index, prompt_and_model, parser, input_data, logger
-    )
-    return search_queries
 
 
 # @traceable(run_type="chain")
@@ -600,7 +679,7 @@ ARTICLE:
     prompt_and_model = prompt_template | model
 
     logger.info(f"[{index+1}] Performing comprehensive edit of the article...")
-    edited_article = await generate_outline_with_retries(
+    edited_article = await generate_with_retries(
         index, prompt_and_model, parser, input_data, logger
     )
 

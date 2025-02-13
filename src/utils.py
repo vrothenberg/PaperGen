@@ -9,10 +9,68 @@ import logging
 from datetime import datetime
 from typing import Any, List, Dict, Callable, Coroutine, TypeVar, ParamSpec, Union, Set
 from src.models import SearchQuery, Article, Paper
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
+from langchain.output_parsers import PydanticOutputParser
+from langchain_core.runnables import RunnableSequence
 
 T = TypeVar('T')
 P = ParamSpec('P')
+
+MAX_RETRIES = 10
+RETRY_DELAY = 2.0
+
+# Define a generic type for Pydantic models
+T = TypeVar('T', bound=BaseModel)
+
+async def generate_with_retries(
+    index: int,
+    prompt_and_model: RunnableSequence,
+    parser: PydanticOutputParser[T],
+    input_data: Dict,
+    logger: logging.Logger = None
+) -> T:
+    """
+    Generates content with retries using a given prompt, model, and output parser.
+
+    Args:
+        index (int): Index of the current operation, used for logging.
+        prompt_and_model (RunnableSequence): A LangChain RunnableSequence representing the prompt and model.
+        parser (PydanticOutputParser[T]): A PydanticOutputParser for parsing the output into the desired type.
+        input_data (Dict): The input data for the prompt.
+        logger (logging.Logger, optional): Logger instance. Defaults to None.
+
+    Returns:
+        T: An instance of the parsed model.
+
+    Raises:
+        Exception: If the maximum number of retries is reached without success.
+    """
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            # Invoke the model with the input data
+            logger.info(f"[{index+1}] Attempt {attempt} of {MAX_RETRIES}...")
+            output = await prompt_and_model.ainvoke(input_data)
+            
+            # Parse and validate the generated content
+            parsed_output = await parser.ainvoke(output)
+            logger.info(f"[{index+1}] Success on attempt {attempt}.")
+            return parsed_output
+        
+        except ValidationError as e:
+            logger.error(f"[{index+1}] Validation Error on attempt {attempt}: {e}")
+        except Exception as ex:
+            logger.error(f"[{index+1}] Error on attempt {attempt}: {ex}")
+
+        # Wait before retrying
+        if attempt < MAX_RETRIES:
+            logger.info(f"[{index+1}] Retrying in {RETRY_DELAY ** attempt} seconds...")
+            await asyncio.sleep(RETRY_DELAY ** attempt)
+        else:
+            logger.error(f"[{index+1}] Max retries reached. Aborting.")
+            return None
+    
+
+
 
 
 def save_results(

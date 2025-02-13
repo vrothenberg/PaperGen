@@ -1,3 +1,4 @@
+# src/models.py
 from pydantic import BaseModel, Field, HttpUrl
 from typing import List, Optional, Union
 
@@ -154,6 +155,8 @@ class ExternalIds(BaseModel):
 class Paper(BaseModel):
     section: str
     query: str
+    rationale: str
+    excerpt: Optional[str]
     title: str
     abstract: str
     authors: List[Author] = []
@@ -165,3 +168,16 @@ class Paper(BaseModel):
     openAccessPdf: Optional[HttpUrl] = None
     externalIds: Optional[ExternalIds] = None
     citation: str = Field(..., description="APA-like citation with author(s), title, year, source, DOI/URL")
+
+
+class PaperList(BaseModel):
+    """
+    Wrapper class for a list of Paper objects.
+    """
+    root: List[Paper] = Field(..., description="List of Paper results from Semantic Scholar.")
+
+class TitleList(BaseModel):
+    """
+    Model for a list of paper titles.
+    """
+    root: List[str] = Field(..., description="List of paper titles")

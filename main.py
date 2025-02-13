@@ -15,8 +15,9 @@ from src.config import SEMANTIC_SCHOLAR_API_KEY
 from src.generators import (
     generate_outline,
     refine_outline_with_uptodate,
-    integrate_papers,
     generate_search_query_response,
+    filter_papers_by_relevancy,
+    integrate_papers,
     comprehensive_edit
 )
 from src.semanticscholar import SemanticScholarAPI
@@ -35,12 +36,12 @@ from src.models import Article
 # GENERATIVE_MODEL_NAME = "gemini-1.5-pro"
 GENERATIVE_MODEL_NAME = "gemini-2.0-flash-exp"
 OUTPUT_DIR = f"data/output/{GENERATIVE_MODEL_NAME}"
-# CSV_FILE = "data/condition_revised.csv"
-CSV_FILE = "data/missing_conditions.csv"
+CSV_FILE = "data/condition_revised.csv"
+# CSV_FILE = "data/missing_conditions.csv"
 JOURNALS_FILE = "data/journals_df.csv"
 SEARCH_RESULTS_FILE = "data/search_results_revised.json"
 LOG_FILE_NAME = "pipeline.log"
-MAX_CONCURRENT_TASKS = 6
+MAX_CONCURRENT_TASKS = 5
 TEMPERATURE = 1.0
 TOP_UNIQUE_FILES = 20
 MIN_SEARCH_SCORE = 10.0
@@ -72,7 +73,6 @@ def setup_logger(output_dir: str) -> logging.Logger:
 
     logger.info(f"Logging initialized. Log file: {log_file}")
     return logger
-
 
 
 async def integrate_uptodate_content(
@@ -323,23 +323,13 @@ async def process_topic(
 
         # Remove and renumber bad references
         article_data = json.loads(article.model_dump_json(indent=2))
-        # bad_references = identify_bad_references(article_data)
-        # article_data = remove_references(article_data, bad_references)
-        # article_data = remove_inline_citations(article_data, bad_references)
-
-        # if not check_for_duplicate_references(article_data):
-        #     remap = create_remap_dictionary(article_data)
-        #     article_data = update_reference_numbers(article_data, remap)
-        #     article_data = update_inline_citations(article_data, remap)
-        # else:
-        #     logger.warning(f"Duplicate references in {topic} after UpToDate.")
         article_data = clean_references(article_data)
         
         article_json = json.dumps(article_data, indent=2)
         save_results(index, article_json, f"{topic}_uptodate_remapped", topic_dir, logger)
         article = Article.model_validate_json(article_json)
 
-        
+
         # Generate Search Queries and Fetch Papers
         logger.info("Calling generate_search_query_response")
         search_queries = await generate_search_query_response(
@@ -364,10 +354,19 @@ async def process_topic(
         save_results(index, papers_json, f"{topic}_papers_top", topic_dir, logger)
         logger.info(f"[{index + 1}] Selected only {len(top_papers)} papers for: {topic}")
 
+        # Filter Papers by Relevance
+        logger.info(f"[{index + 1}] Filtering papers for: {topic}")
+        filtered_papers = await filter_papers_by_relevancy(
+          index, condition_name, alternative_name, category, top_papers, model, logger
+        )
+        filtered_papers_json = json.dumps([paper.model_dump(mode='json') for paper in filtered_papers],indent=2)
+        save_results(index, filtered_papers_json, f"{topic}_papers_filtered", topic_dir, logger)
+        logger.info(f"[{index + 1}] Filtered to {len(filtered_papers)} papers for: {topic}")
+
         # Integrate Papers into Article
         sourced_article = await integrate_papers(
-            index, condition_name, alternative_name, category, article, top_papers, 
-            model, logger
+            index, condition_name, alternative_name, category, article, 
+            filtered_papers, model, logger
         )
 
         sourced_article_json = sourced_article.model_dump_json(indent=2)
@@ -376,16 +375,6 @@ async def process_topic(
 
         # Remove and renumber bad references
         article_data = json.loads(sourced_article_json)
-        # bad_references = identify_bad_references(article_data)
-        # article_data = remove_references(article_data, bad_references)
-        # article_data = remove_inline_citations(article_data, bad_references)
-
-        # if not check_for_duplicate_references(article_data):
-        #     remap = create_remap_dictionary(article_data)
-        #     article_data = update_reference_numbers(article_data, remap)
-        #     article_data = update_inline_citations(article_data, remap)
-        # else:
-        #     logger.warning(f"Duplicate references in {topic} after SemanticScholar.")
         article_data = clean_references(article_data)
         
         article_json = json.dumps(article_data, indent=2)
@@ -406,18 +395,6 @@ async def process_topic(
 
         # Remove and renumber bad references (after comprehensive edit)
         article_data = json.loads(final_article.model_dump_json(indent=2))
-        # bad_references = identify_bad_references(article_data)
-        # article_data = remove_references(article_data, bad_references)
-        # article_data = remove_inline_citations(article_data, bad_references)
-
-        # if not check_for_duplicate_references(article_data):
-        #     remap = create_remap_dictionary(article_data)
-        #     article_data = update_reference_numbers(article_data, remap)
-        #     article_data = update_inline_citations(article_data, remap)
-        # else:
-        #     logger.warning(
-        #         f"Duplicate references in {topic} after Comprehensive Edit."
-        #     )
         article_data = clean_references(article_data)
 
         # Convert article_data back to an Article object before saving
@@ -477,7 +454,7 @@ async def main():
         semaphore = asyncio.Semaphore(MAX_CONCURRENT_TASKS)
         tasks = []
 
-        for idx, row in conditions_df.iterrows():
+        for idx, row in conditions_df[110:].iterrows():
             async def bound_process(idx=idx, topic=conditions_df['Condition']):
                 async with semaphore:
                     return await process_topic(
